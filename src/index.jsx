@@ -1,12 +1,17 @@
-import { h, render } from "preact";
 require("./app.scss");
+import React from "react";
+import ReactDOM from "react-dom";
 
-window.setTimeout(_ => {
-  render(
-    <div id="foo">
-      <span>Hello, world!</span>
-      <button onClick={e => alert("hi!")}>Click Me</button>
-    </div>,
-    document.body
-  );
-}, 50);
+const title = "My Minimal React Webpack Babel Setup";
+
+ReactDOM.render(
+  <section class="section">
+    <div class="container">
+      <h1 class="title">{title}</h1>
+      <p class="subtitle">
+        My first website with <strong>Bulma</strong>!
+      </p>
+    </div>
+  </section>,
+  document.getElementById("app")
+);
