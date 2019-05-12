@@ -8,14 +8,11 @@ const title = "My Minimal React Webpack Babel Setup";
 const apiPath = process.env.API_UPLOAD_HANDLER_URL;
 const imageBucket = process.env.IMAGE_BUCKET;
 
-import { Card, Media, Image, Content, Heading } from "react-bulma-components";
+import { Card, Media, Content, Heading } from "react-bulma-components";
 
 const Profile = props => (
   <Card>
-    <Card.Image
-      size="4by3"
-      src="http://bulma.io/images/placeholders/1280x960.png"
-    />
+    <Card.Image size="4by3" rounded="true" src={props.profileImageUrl} />
     <Card.Content>
       <Media>
         <Media.Item>
@@ -50,7 +47,7 @@ const Profile = props => (
 );
 
 const UploadForm = props => (
-  <form>
+  <form className="hidden">
     <input type="file" id="uploadFile" onChange={props.onFileChange} />
   </form>
 );
@@ -63,7 +60,10 @@ const App = props => (
         Demo profile <strong>Bulma</strong>!
       </p>
       <div>
-        <Profile onUploadNewPicture={props.onUploadNewPicture} />
+        <Profile
+          profileImageUrl={props.profileImageUrl}
+          onUploadNewPicture={props.onUploadNewPicture}
+        />
         <UploadForm onFileChange={props.onFileChange} />
       </div>
     </div>
@@ -74,7 +74,7 @@ const onUploadNewPicture = () => {
   console.log("Button clicked");
 };
 
-const onFileChange = e => {
+const onFileChange = uploadSuccessHandler => e => {
   console.log(e.target.files);
   const file = e.target.files[0];
   if (!file) {
@@ -110,10 +110,13 @@ const onFileChange = e => {
         .then(uploadResponse =>
           uploadResponse.headers["Content-Type"] === "application/json"
             ? uploadResponse.json()
+            : uploadResponse.status === 204
+            ? uploadResponse
             : uploadResponse.text()
         )
         .then(upload => {
           console.info("Uploaded", upload);
+          uploadSuccessHandler(imageBucket, file.name, upload.url + file.name);
         })
         .catch(uploadError => {
           console.warn("Failed to upload", uploadError);
@@ -124,7 +127,30 @@ const onFileChange = e => {
     });
 };
 
+const onFileUploaded = (bucket, name, url) => {
+  console.info("File uploaded " + bucket + ", " + name + ", " + url);
+  const loc =
+    window.location.protocol +
+    "//" +
+    window.location.host +
+    window.location.pathname;
+  window.location = loc + "?" + url;
+};
+
+const getProfileImageUrl = () => {
+  const loc = String(window.location);
+  if (loc.indexOf("?") === -1) {
+    return "http://bulma.io/images/placeholders/1280x960.png";
+  } else {
+    return loc.substring(loc.indexOf("?") + 1);
+  }
+};
+
 ReactDOM.render(
-  <App onUploadNewPicture={onUploadNewPicture} onFileChange={onFileChange} />,
+  <App
+    profileImageUrl={getProfileImageUrl()}
+    onUploadNewPicture={onUploadNewPicture}
+    onFileChange={onFileChange(onFileUploaded)}
+  />,
   document.getElementById("app")
 );
