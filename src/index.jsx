@@ -2,31 +2,91 @@ require("./app.scss");
 import React from "react";
 import ReactDOM from "react-dom";
 
-const title = "My Minimal React Webpack Babel Setup";
+import * as firebase from "firebase/app";
+import "firebase/messaging";
+
+firebase.initializeApp({
+  apiKey: process.env.FCM_APIKEY,
+  authDomain: "find-faces.firebaseapp.com",
+  databaseURL: "https://find-faces.firebaseio.com",
+  projectId: "find-faces",
+  storageBucket: "find-faces.appspot.com",
+  messagingSenderId: process.env.FCM_MESSAGING_SENDERID,
+  appId: process.env.FCM_APPID
+});
+
+const messaging = firebase.messaging();
+messaging.usePublicVapidKey(process.env.FCM_VAPID_KEY);
+
+messaging
+  .requestPermission()
+  .then(function() {
+    console.info("Notification permission granted.");
+  })
+  .catch(function(err) {
+    console.warn("Unable to get permission to notify.", err);
+  });
+
+messaging
+  .getToken()
+  .then(function(currentToken) {
+    if (currentToken) {
+      console.info("Got token", currentToken);
+    } else {
+      console.info("No Instance ID token available.");
+    }
+  })
+  .catch(function(err) {
+    console.warn("An error occurred while retrieving token. ", err);
+  });
+
+messaging.onTokenRefresh(function() {
+  messaging
+    .getToken()
+    .then(function(refreshedToken) {
+      console.info("Token refreshed", refreshedToken);
+    })
+    .catch(function(err) {
+      console.warn("Unable to retrieve refreshed token ", err);
+    });
+});
+
+// Handle incoming messages. Called when:
+// - a message is received while the app has focus
+// - the user clicks on an app notification created by a service worker
+//   `messaging.setBackgroundMessageHandler` handler.
+messaging.onMessage(function(payload) {
+  console.info("Message received. ", payload);
+});
+
+const title = "My social app";
 
 // Preprocessed in webpack to real UI
 const apiPath = process.env.API_UPLOAD_HANDLER_URL;
 const imageBucket = process.env.IMAGE_BUCKET;
+const msgPath = process.env.API_MESSAGING_URL;
 
 import { Card, Media, Content, Heading } from "react-bulma-components";
 
 const Profile = props => (
   <Card>
-    <Card.Image size="4by3" rounded="true" src={props.profileImageUrl} />
+    <Card.Image
+      style={{ maxHeight: "450px", overflowY: "hidden" }}
+      src={props.profileImageUrl}
+    />
     <Card.Content>
       <Media>
         <Media.Item>
-          <Heading size={4}>John Smith</Heading>
+          <Heading size={4}>Mary Jane</Heading>
           <Heading subtitle size={6}>
-            @johnsmith
+            @maryjane
           </Heading>
         </Media.Item>
       </Media>
       <Content>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus nec
-        iaculis mauris.
-        <br />
-        <a>@bulmaio</a> <a href="#1">#css</a> <a href="#2">#responsive</a>
+        iaculis mauris. <a>@goserverless</a> <a href="#1">#orchestration</a>{" "}
+        <a href="#2">#rules</a>
         <br />
         <time dateTime="2016-1-1">11:09 PM, 1 Jan 2016</time>
       </Content>
@@ -38,7 +98,10 @@ const Profile = props => (
         >
           <label htmlFor="uploadFile">New picture</label>
         </Card.Footer.Item>
-        <Card.Footer.Item renderAs="a" href="#Maybe">
+        <Card.Footer.Item
+          renderAs="a"
+          href="https://twitter.com/intent/tweet?text=Take+a+look+at+my+profile+@maryjane"
+        >
           Share
         </Card.Footer.Item>
       </Card.Footer>
@@ -56,9 +119,7 @@ const App = props => (
   <section className="section">
     <div className="container">
       <h1 className="title">{title}</h1>
-      <p className="subtitle">
-        Demo profile <strong>Bulma</strong>!
-      </p>
+      <p className="subtitle">My awesome profile</p>
       <div>
         <Profile
           profileImageUrl={props.profileImageUrl}

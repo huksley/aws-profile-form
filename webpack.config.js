@@ -9,7 +9,9 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 const clientConfig = {
-  entry,
+  entry: {
+    app: entry
+  },
   target: "web",
   devtool: "source-map",
   devServer: {
@@ -19,7 +21,7 @@ const clientConfig = {
   output: {
     path: outputPath,
     publicPath,
-    filename: "index.[hash].js"
+    filename: "[id].js"
   },
   module: {
     rules: [
@@ -75,19 +77,40 @@ const clientConfig = {
     }),
     new CopyWebpackPlugin([
       { from: "assets", to: "assets" },
-      { from: "public" }
+      { from: "public" },
+      { from: "src/firebase-messaging-sw.js", transform: (content) => {
+        let s = String(content).replace("process.env.FCM_MESSAGING_SENDERID", JSON.stringify(process.env.FCM_MESSAGING_SENDERID))
+        return s
+      }},
+      { from: "node_modules/firebase/firebase-app.js", to: "worker/firebaseApp.js" },
+      { from: "node_modules/firebase/firebase-messaging.js", to: "worker/firebaseMessaging.js" }
     ]),
     // During the build make literal replacements on client side for
-    // process.env.API_URL, because there is no process.env
+    // configuration values, because there is no process.env
     new webpack.DefinePlugin({
-      "process.env.PUBLIC_PATH": publicPath,
+      "process.env.PUBLIC_PATH": JSON.stringify(publicPath),
       "process.env.API_UPLOAD_HANDLER_URL": JSON.stringify(
         process.env.API_UPLOAD_HANDLER_URL || "http://localhost:3000/api"
       ),
+      "process.env.API_MESSAGING_URL": JSON.stringify(
+        process.env.API_MESSAGING_URL || "http://localhost:3000/api"
+      ),
       "process.env.IMAGE_BUCKET": JSON.stringify(
         process.env.IMAGE_BUCKET || "sample-bucket"
+      ),
+      "process.env.FCM_MESSAGING_SENDERID": JSON.stringify(
+        process.env.FCM_MESSAGING_SENDERID || ""
+      ),
+      "process.env.FCM_VAPID_KEY": JSON.stringify(
+        process.env.FCM_VAPID_KEY || ""
+      ),
+      "process.env.FCM_APIKEY": JSON.stringify(
+        process.env.FCM_APIKEY || ""
+      ),
+      "process.env.FCM_APPID": JSON.stringify(
+        process.env.FCM_APPID || ""
       )
-    })
+    }),
   ]
 };
 
