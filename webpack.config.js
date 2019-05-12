@@ -81,8 +81,11 @@ const clientConfig = {
     // process.env.API_URL, because there is no process.env
     new webpack.DefinePlugin({
       "process.env.PUBLIC_PATH": publicPath,
-      "process.env.API_PATH": JSON.stringify(
-        process.env.API_PATH || "http://localhost:3000/api"
+      "process.env.API_UPLOAD_HANDLER_URL": JSON.stringify(
+        process.env.API_UPLOAD_HANDLER_URL || "http://localhost:3000/api"
+      ),
+      "process.env.IMAGE_BUCKET": JSON.stringify(
+        process.env.IMAGE_BUCKET || "sample-bucket"
       )
     })
   ]

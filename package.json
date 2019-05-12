@@ -4,13 +4,14 @@
   "main": "src/index.js",
   "license": "MIT",
   "scripts": {
-    "build": "NODE_ENV=production webpack --mode production",
-    "build:dev": "yarn nodemon -w webpack.config.js --exec webpack",
-    "dev": "yarn nodemon -w webpack.config.js --exec webpack-dev-server --mode development"
+    "build": "chamber exec find-face/test1 -- NODE_ENV=production webpack --mode production",
+    "build:dev": "chamber exec find-face/test1 -- nodemon -w webpack.config.js --exec webpack",
+    "dev": "chamber exec find-face/test1 -- nodemon -w webpack.config.js --exec webpack-dev-server --mode development"
   },
   "dependencies": {
     "bulma": "^0.7.4",
-    "react": "^16.8.6"
+    "react": "^16.8.6",
+    "react-bulma-components": "^2.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.4.4",
