@@ -127,7 +127,7 @@ messaging.onMessage(function(payload) {
   console.info("Message received", payload);
   handlers.forEach(handler => {
     try {
-      handler(payload);
+      handler(payload.data);
     } catch (e) {
       console.warn("Failed to send message to handler " + handler, payload);
     }

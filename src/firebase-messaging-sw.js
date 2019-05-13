@@ -1,6 +1,6 @@
 /**
  * Standalone, barebones, minimal service workers Javascript
- * 
+ *
  * NOTE: This file is never compiled by Webpack,
  * It just copied verbatim (except process.env replacements) to the
  * dist folder.
@@ -22,7 +22,11 @@ messaging.setBackgroundMessageHandler(function(payload) {
 
   var notificationTitle = "Notification";
   var notificationOptions = {
-    body: payload.message ? payload.message : "No message",
+    body: payload.message
+      ? payload.message
+      : payload.data && payload.data.message
+      ? payload.data.message
+      : "No message",
     icon: location.origin + "/assets/firebase-logo.png"
   };
 

@@ -8,15 +8,41 @@ const title = "My social app";
 const apiPath = process.env.API_UPLOAD_HANDLER_URL;
 const imageBucket = process.env.IMAGE_BUCKET;
 
-import { Card, Media, Content, Heading, Tag } from "react-bulma-components";
+const PLACEHOLDER_URL = "http://bulma.io/images/placeholders/1280x960.png";
+
+import {
+  Card,
+  Media,
+  Content,
+  Heading,
+  Tag,
+  Loader
+} from "react-bulma-components";
 import { unsubscribeMessageHandler, subscribeMessageHandler } from "./message";
+import { urlToBucketName, urlToKeyName } from "./util";
 
 const Profile = props => (
   <Card>
-    <Card.Image
-      style={{ maxHeight: "450px", overflowY: "hidden" }}
-      src={props.profileImageUrl}
-    />
+    <div className="CardImageHolder">
+      {props.waitProcessing ? (
+        <div className="LoaderHolder">
+          <Loader
+            style={{
+              width: 300,
+              height: 300,
+              border: "5px dashed #909090",
+              borderTopColor: "transparent",
+              borderRightColor: "transparent"
+            }}
+          />
+        </div>
+      ) : (
+        <Card.Image
+          style={{ maxHeight: "450px", overflowY: "hidden" }}
+          src={props.profileImageUrl}
+        />
+      )}
+    </div>
     <Card.Content>
       <Media>
         <Media.Item>
@@ -53,6 +79,16 @@ const Profile = props => (
   </Card>
 );
 
+// FIXME: never assume region
+function s3UrlToHttp(s3Url) {
+  return (
+    "https://" +
+    urlToBucketName(s3Url) +
+    ".s3-eu-west-1.amazonaws.com/" +
+    urlToKeyName(s3Url)
+  );
+}
+
 const UploadForm = props => (
   <form className="hidden">
     <input type="file" id="uploadFile" onChange={props.onFileChange} />
@@ -63,11 +99,12 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      profileImageUrl: "http://bulma.io/images/placeholders/1280x960.png",
+      profileImageUrl: PLACEHOLDER_URL,
       alertType: "info",
       alertMessage: "",
       userId: null,
-      token: null
+      token: null,
+      waitProcessing: false
     };
     this.onMessage = this.onMessage.bind(this);
     this.onUploadComplete = this.onUploadComplete.bind(this);
@@ -97,6 +134,22 @@ class App extends React.Component {
         alertMessage: msg.message,
         alertType: msg.type || "info"
       });
+
+      if (msg.code === "resize" && msg.thumbnailUrl) {
+        const url = s3UrlToHttp(msg.thumbnailUrl);
+        this.setState({
+          profileImageUrl: url,
+          waitProcessing: false
+        });
+      }
+
+      if (msg.code === "rekognition-failed") {
+        this.setState({
+          alertType: "danger",
+          profileImageUrl: PLACEHOLDER_URL,
+          waitProcessing: false
+        });
+      }
     }
   }
 
@@ -105,9 +158,8 @@ class App extends React.Component {
   }
 
   onUploadComplete(bucket, key, url) {
-    this.setState({
-      profileImageUrl: url
-    });
+    console.info("Upload complete", arguments);
+    this.setState({ waitProcessing: true });
   }
 
   render() {
@@ -127,6 +179,7 @@ class App extends React.Component {
             <Profile
               profileImageUrl={this.state.profileImageUrl}
               onUploadNewPicture={this.onUploadNewPicture}
+              waitProcessing={this.state.waitProcessing}
             />
             <UploadForm
               onFileChange={uploadFileHandlerGenerator(
