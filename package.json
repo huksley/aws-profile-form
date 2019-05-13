@@ -4,9 +4,11 @@
   "main": "src/index.js",
   "license": "MIT",
   "scripts": {
-    "build": "chamber exec find-face/test1 -- NODE_ENV=production webpack --mode production",
+    "build": "chamber exec find-face/test1 -- webpack --mode production",
     "build:dev": "chamber exec find-face/test1 -- nodemon -w webpack.config.js --exec webpack",
-    "dev": "chamber exec find-face/test1 -- nodemon -w webpack.config.js -w src/firebase-messaging-sw.js --exec webpack-dev-server --mode development"
+    "dev": "chamber exec find-face/test1 -- nodemon -w webpack.config.js -w src/firebase-messaging-sw.js --exec webpack-dev-server --mode development",
+    "deploy": "chamber exec find-face/test1 -- yarn s3",
+    "s3": "aws s3 sync --acl public-read dist/ s3://${WEBAPP_BUCKET}/"
   },
   "dependencies": {
     "bulma": "^0.7.4",
