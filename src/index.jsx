@@ -2,71 +2,14 @@ require("./app.scss");
 import React from "react";
 import ReactDOM from "react-dom";
 
-import * as firebase from "firebase/app";
-import "firebase/messaging";
-
-firebase.initializeApp({
-  apiKey: process.env.FCM_APIKEY,
-  authDomain: "find-faces.firebaseapp.com",
-  databaseURL: "https://find-faces.firebaseio.com",
-  projectId: "find-faces",
-  storageBucket: "find-faces.appspot.com",
-  messagingSenderId: process.env.FCM_MESSAGING_SENDERID,
-  appId: process.env.FCM_APPID
-});
-
-const messaging = firebase.messaging();
-messaging.usePublicVapidKey(process.env.FCM_VAPID_KEY);
-
-messaging
-  .requestPermission()
-  .then(function() {
-    console.info("Notification permission granted.");
-  })
-  .catch(function(err) {
-    console.warn("Unable to get permission to notify.", err);
-  });
-
-messaging
-  .getToken()
-  .then(function(currentToken) {
-    if (currentToken) {
-      console.info("Got token", currentToken);
-    } else {
-      console.info("No Instance ID token available.");
-    }
-  })
-  .catch(function(err) {
-    console.warn("An error occurred while retrieving token. ", err);
-  });
-
-messaging.onTokenRefresh(function() {
-  messaging
-    .getToken()
-    .then(function(refreshedToken) {
-      console.info("Token refreshed", refreshedToken);
-    })
-    .catch(function(err) {
-      console.warn("Unable to retrieve refreshed token ", err);
-    });
-});
-
-// Handle incoming messages. Called when:
-// - a message is received while the app has focus
-// - the user clicks on an app notification created by a service worker
-//   `messaging.setBackgroundMessageHandler` handler.
-messaging.onMessage(function(payload) {
-  console.info("Message received. ", payload);
-});
-
 const title = "My social app";
 
-// Preprocessed in webpack to real UI
+// Preprocessed in webpack to real variables
 const apiPath = process.env.API_UPLOAD_HANDLER_URL;
 const imageBucket = process.env.IMAGE_BUCKET;
-const msgPath = process.env.API_MESSAGING_URL;
 
-import { Card, Media, Content, Heading } from "react-bulma-components";
+import { Card, Media, Content, Heading, Tag } from "react-bulma-components";
+import { unsubscribeMessageHandler, subscribeMessageHandler } from "./message";
 
 const Profile = props => (
   <Card>
@@ -92,11 +35,12 @@ const Profile = props => (
       </Content>
       <Card.Footer>
         <Card.Footer.Item
-          renderAs="a"
+          renderAs="label"
+          htmlFor="uploadFile"
           href="#Yes"
           onClick={props.onUploadNewPicture}
         >
-          <label htmlFor="uploadFile">New picture</label>
+          New picture
         </Card.Footer.Item>
         <Card.Footer.Item
           renderAs="a"
@@ -115,46 +59,134 @@ const UploadForm = props => (
   </form>
 );
 
-const App = props => (
-  <section className="section">
-    <div className="container">
-      <h1 className="title">{title}</h1>
-      <p className="subtitle">My awesome profile</p>
-      <div>
-        <Profile
-          profileImageUrl={props.profileImageUrl}
-          onUploadNewPicture={props.onUploadNewPicture}
-        />
-        <UploadForm onFileChange={props.onFileChange} />
-      </div>
-    </div>
-  </section>
-);
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      profileImageUrl: "http://bulma.io/images/placeholders/1280x960.png",
+      alertType: "info",
+      alertMessage: "",
+      userId: null,
+      token: null
+    };
+    this.onMessage = this.onMessage.bind(this);
+    this.onUploadComplete = this.onUploadComplete.bind(this);
+    this.onUploadNewPicture = this.onUploadNewPicture.bind(this);
+    this.onUserRegistration = this.onUserRegistration.bind(this);
+  }
 
-const onUploadNewPicture = () => {
-  console.log("Button clicked");
-};
+  onUserRegistration(userId, token) {
+    this.setState({
+      userId,
+      token
+    });
+  }
 
-const onFileChange = uploadSuccessHandler => e => {
+  componentDidMount() {
+    subscribeMessageHandler(this.onMessage, this.onUserRegistration);
+  }
+
+  componentWillUnmount() {
+    unsubscribeMessageHandler(this.onMessage);
+  }
+
+  onMessage(msg) {
+    console.log("New message", msg);
+    if (msg && msg.message) {
+      this.setState({
+        alertMessage: msg.message,
+        alertType: msg.type || "info"
+      });
+    }
+  }
+
+  onUploadNewPicture() {
+    console.log("Button clicked");
+  }
+
+  onUploadComplete(bucket, key, url) {
+    this.setState({
+      profileImageUrl: url
+    });
+  }
+
+  render() {
+    return (
+      <section className="section">
+        <div className="container">
+          <h1 className="title">{title}</h1>
+          <p className="subtitle">My awesome profile</p>
+          <div className="ProfileHolder">
+            <div className="TagHolder">
+              {this.state.alertMessage && (
+                <Tag color={this.state.alertType}>
+                  {this.state.alertMessage}
+                </Tag>
+              )}
+            </div>
+            <Profile
+              profileImageUrl={this.state.profileImageUrl}
+              onUploadNewPicture={this.onUploadNewPicture}
+            />
+            <UploadForm
+              onFileChange={uploadFileHandlerGenerator(
+                this.state.userId,
+                this.onUploadComplete,
+                this.onMessage
+              )}
+            />
+          </div>
+        </div>
+      </section>
+    );
+  }
+}
+
+/**
+ * Generates event listener which updates progress to specified function
+ */
+const uploadFileHandlerGenerator = (
+  userId,
+  uploadSuccessHandler,
+  messageHandler
+) => e => {
   console.log(e.target.files);
   const file = e.target.files[0];
   if (!file) {
+    messageHandler({
+      type: "danger",
+      message: "No file selected"
+    });
     return;
   }
-  console.log("Generating a upload form for " + file);
+
+  const ext =
+    file.name.indexOf(".") > 0
+      ? file.name.substring(file.name.indexOf(".") + 1)
+      : "jpg";
+
+  const targetFileName = userId + "-" + new Date().getTime() + "." + ext;
+  const targetFolder = "profile/";
+
+  messageHandler({
+    message: "Uploading " + file.name
+  });
+  console.info("Generating a upload form", file);
   fetch(apiPath, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      s3Url: "s3://" + imageBucket + "/" + file.name
+      s3Url: "s3://" + imageBucket + "/" + targetFolder + targetFileName
     })
   })
     .then(presignedResponse => presignedResponse.json())
     .then(presigned => {
       console.info("Generated link", presigned);
-
+      messageHandler({
+        message: "Got presigned form"
+      });
       const form = new FormData();
       for (const field in presigned.fields) {
         if (presigned.fields.hasOwnProperty(field)) {
@@ -177,41 +209,30 @@ const onFileChange = uploadSuccessHandler => e => {
         )
         .then(upload => {
           console.info("Uploaded", upload);
-          uploadSuccessHandler(imageBucket, file.name, upload.url + file.name);
+          messageHandler({
+            message: "Uploaded"
+          });
+          uploadSuccessHandler(
+            imageBucket,
+            file.name,
+            upload.url + targetFolder + targetFileName
+          );
         })
         .catch(uploadError => {
           console.warn("Failed to upload", uploadError);
+          messageHandler({
+            type: "warning",
+            message: "Upload failed"
+          });
         });
     })
     .catch(presignedError => {
       console.warn("Failed to generate upload link", presignedError);
+      messageHandler({
+        type: "warning",
+        message: "Presigned form failed"
+      });
     });
 };
 
-const onFileUploaded = (bucket, name, url) => {
-  console.info("File uploaded " + bucket + ", " + name + ", " + url);
-  const loc =
-    window.location.protocol +
-    "//" +
-    window.location.host +
-    window.location.pathname;
-  window.location = loc + "?" + url;
-};
-
-const getProfileImageUrl = () => {
-  const loc = String(window.location);
-  if (loc.indexOf("?") === -1) {
-    return "http://bulma.io/images/placeholders/1280x960.png";
-  } else {
-    return loc.substring(loc.indexOf("?") + 1);
-  }
-};
-
-ReactDOM.render(
-  <App
-    profileImageUrl={getProfileImageUrl()}
-    onUploadNewPicture={onUploadNewPicture}
-    onFileChange={onFileChange(onFileUploaded)}
-  />,
-  document.getElementById("app")
-);
+ReactDOM.render(<App />, document.getElementById("app"));

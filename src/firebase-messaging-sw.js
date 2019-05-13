@@ -1,13 +1,12 @@
 /**
  * Standalone, barebones, minimal service workers Javascript
+ * 
+ * NOTE: This file is never compiled by Webpack,
+ * It just copied verbatim (except process.env replacements) to the
+ * dist folder.
  */
-
 importScripts(location.origin + "/worker/firebaseApp.js");
 importScripts(location.origin + "/worker/firebaseMessaging.js");
-/*
-importScripts('https://www.gstatic.com/firebasejs/6.0.2/firebase-app.js');
-importScripts('https://www.gstatic.com/firebasejs/6.0.2/firebase-messaging.js');
-*/
 
 firebase.initializeApp({
   messagingSenderId: process.env.FCM_MESSAGING_SENDERID
@@ -17,7 +16,7 @@ const messaging = firebase.messaging();
 
 messaging.setBackgroundMessageHandler(function(payload) {
   console.info(
-    "[firebase-messaging-sw.js] Received background message ",
+    "[firebase-messaging-sw.js] Received background messages",
     payload
   );
 

@@ -33,3 +33,11 @@ $input-shadow: none;
 .media-content {
   overflow-y: hidden;
 }
+
+.ProfileHolder .TagHolder {
+  text-align: center;
+  display: block;
+  position: absolute;
+  z-index: 999;
+  width: 100%;
+}
