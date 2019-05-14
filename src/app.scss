@@ -26,6 +26,8 @@ $input-shadow: none;
 
 @import "~bulma/bulma";
 
+@import "~@fortawesome/fontawesome-free/css/all.css";
+
 .hidden {
   display: none;
 }
@@ -43,7 +45,7 @@ $input-shadow: none;
   display: block;
   position: fixed;
   top: 0px;
-  z-index: 999;
+  z-index: 99999;
   width: 100%;
   padding-top: 2px;
 }

@@ -33,7 +33,7 @@ const clientConfig = {
         }
       },
       {
-        test: /\.(gif|png|jpe?g|svg)$/i,
+        test: /\.(gif|png|jpe?g|svg|woff|eot|woff2|ttf)$/i,
         use: [
           "file-loader",
           {
@@ -76,7 +76,7 @@ const clientConfig = {
       template: "src/index.html"
     }),
     new CopyWebpackPlugin([
-      { from: "assets", to: "assets" },
+      { from: "assets", to: "assets/" },
       { from: "public" },
       { from: "src/firebase-messaging-sw.js", transform: (content) => {
         let s = String(content).replace("process.env.FCM_MESSAGING_SENDERID", JSON.stringify(process.env.FCM_MESSAGING_SENDERID))

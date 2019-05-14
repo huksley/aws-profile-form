@@ -9,6 +9,7 @@ const imageBucket = process.env.IMAGE_BUCKET;
 import { unsubscribeMessageHandler, subscribeMessageHandler } from "./message";
 import { urlToBucketName, urlToKeyName } from "./util";
 import { Page, PLACEHOLDER_URL } from "./layout";
+import { getRandomName } from "./random-name";
 
 // FIXME: never assume region
 function s3UrlToHttp(s3Url) {
@@ -30,7 +31,8 @@ class App extends Page {
       userId: null,
       token: null,
       waitProcessing: false,
-      alertClearTimeout: null
+      alertClearTimeout: null,
+      fullName: getRandomName(true)
     };
     this.onMessage = this.onMessage.bind(this);
     this.onUploadComplete = this.onUploadComplete.bind(this);
@@ -76,7 +78,7 @@ class App extends Page {
       this.setState({
         alertClearTimeout: setTimeout(() => {
           this.setState({ alertMessage: "" });
-        }, 2000)
+        }, 5000)
       });
 
       if (msg.code === "resize" && msg.thumbnailUrl) {

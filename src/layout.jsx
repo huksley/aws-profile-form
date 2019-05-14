@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 
 export const PLACEHOLDER_URL =
-  "http://bulma.io/images/placeholders/1280x960.png";
+  "https://imgplaceholder.com/800x600?text=Upload+new...";
 
 import {
   Card,
@@ -52,9 +52,9 @@ export const Profile = props => (
     <Card.Content>
       <Media>
         <Media.Item>
-          <Heading size={4}>Mary Jane</Heading>
+          <Heading size={4}>{props.fullName}</Heading>
           <Heading subtitle size={6}>
-            @maryjane
+            @{props.fullName.toLowerCase().replace(" ", "")}
           </Heading>
         </Media.Item>
       </Media>
@@ -73,13 +73,16 @@ export const Profile = props => (
         htmlFor="uploadFile"
         href="#uploadNewPicture"
       >
-        New picture
+        <i className="fas fa-camera"> </i>&nbsp;New picture
       </Card.Footer.Item>
       <Card.Footer.Item
         renderAs="a"
-        href="https://twitter.com/intent/tweet?text=Take+a+look+at+my+profile+@maryjane"
+        href={
+          "https://twitter.com/intent/tweet?text=Take+a+look+at+my+amazing+new+profile+@" +
+          props.fullName.toLowerCase().replace(" ", "")
+        }
       >
-        Share
+        <i className="fab fa-twitter"> </i>&nbsp;Share
       </Card.Footer.Item>
     </Card.Footer>
   </Card>
@@ -111,6 +114,7 @@ export class Page extends React.Component {
             <Profile
               profileImageUrl={this.state.profileImageUrl}
               waitProcessing={this.state.waitProcessing}
+              fullName={this.state.fullName || "Mary Jane"}
             />
             <UploadForm
               onFileChange={this.getUploadNewPictureHandler() || nop}

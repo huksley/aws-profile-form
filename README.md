@@ -34,7 +34,10 @@ Asynchronious notification handled by Google Cloud Messaging.
 - https://github.com/firebase/quickstart-js/blob/master/messaging/firebase-messaging-sw.js
 - http://craig-russell.co.uk/2016/01/29/service-worker-messaging.html
 
-## License
+## Licenses & attribution
 
-MIT
+Code licenced under MIT
+
 Images from https://unsplash.com/
+
+Favicon by freepik [Watercolor vector created by freepik - www.freepik.com](https://www.freepik.com/free-photos-vectors/watercolor)
