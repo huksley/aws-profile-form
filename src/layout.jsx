@@ -127,7 +127,7 @@ export class Page extends React.Component {
               onFileChange={this.getUploadNewPictureHandler() || nop}
             />
             <div className="footerLink">
-              Serverless orchestration demo by{" "}
+              Serverless microservice orchestration demo by{" "}
               <a href="https://twitter.com/huksley_">huksley</a>
             </div>
           </div>
