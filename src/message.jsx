@@ -21,6 +21,20 @@ messaging
   .requestPermission()
   .then(function() {
     console.info("Notification permission granted.");
+    messaging
+      .getToken()
+      .then(function(currentToken) {
+        if (currentToken) {
+          console.info("Got token", currentToken);
+          token = currentToken;
+          registerUser(currentToken);
+        } else {
+          console.info("No Instance ID token available.");
+        }
+      })
+      .catch(function(err) {
+        console.warn("An error occurred while retrieving token. ", err);
+      });
   })
   .catch(function(err) {
     console.warn("Unable to get permission to notify.", err);
@@ -57,7 +71,6 @@ function registerUser(token) {
     .then(r => {
       console.info("User registered, userId: " + r.userId);
       userId = r.userId;
-      token = r.token;
       registrationHandlers.forEach(f => f(userId, token));
     })
     .catch(err => {
@@ -93,25 +106,12 @@ function unregisterUser() {
     });
 }
 
-messaging
-  .getToken()
-  .then(function(currentToken) {
-    if (currentToken) {
-      console.info("Got token", currentToken);
-      registerUser(currentToken);
-    } else {
-      console.info("No Instance ID token available.");
-    }
-  })
-  .catch(function(err) {
-    console.warn("An error occurred while retrieving token. ", err);
-  });
-
 messaging.onTokenRefresh(function() {
   messaging
     .getToken()
     .then(function(refreshedToken) {
       console.info("Token refreshed", refreshedToken);
+      token = refreshedToken;
       registerUser(currentToken);
     })
     .catch(function(err) {

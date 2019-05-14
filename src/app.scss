@@ -30,6 +30,10 @@ $input-shadow: none;
   display: none;
 }
 
+.section {
+  padding-top: 1.5em;
+}
+
 .media-content {
   overflow-y: hidden;
 }
@@ -37,7 +41,8 @@ $input-shadow: none;
 .ProfileHolder .TagHolder {
   text-align: center;
   display: block;
-  position: absolute;
+  position: fixed;
+  top: 0px;
   z-index: 999;
   width: 100%;
   padding-top: 2px;
@@ -54,8 +59,5 @@ $input-shadow: none;
 }
 
 .CardImageHolder {
-  display: block;
-  min-width: 300px;
-  min-height: 400px;
   max-height: 450px;
 }

@@ -1,3 +1,13 @@
+# Profile form
+
+Demo social network profile page with face and smile recognition. Built on AWS Rekognition with serverless orchestration using AWS Step Functions.
+
+Asynchronious notification handled by Google Cloud Messaging.
+
+## Architecture
+
+![Architecture](architecture.png)
+
 ## Links
 
 - https://couds.github.io/react-bulma-components/

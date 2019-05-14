@@ -2,82 +2,13 @@ require("./app.scss");
 import React from "react";
 import ReactDOM from "react-dom";
 
-const title = "My social app";
-
 // Preprocessed in webpack to real variables
 const apiPath = process.env.API_UPLOAD_HANDLER_URL;
 const imageBucket = process.env.IMAGE_BUCKET;
 
-const PLACEHOLDER_URL = "http://bulma.io/images/placeholders/1280x960.png";
-
-import {
-  Card,
-  Media,
-  Content,
-  Heading,
-  Tag,
-  Loader
-} from "react-bulma-components";
 import { unsubscribeMessageHandler, subscribeMessageHandler } from "./message";
 import { urlToBucketName, urlToKeyName } from "./util";
-
-const Profile = props => (
-  <Card>
-    <div className="CardImageHolder">
-      {props.waitProcessing ? (
-        <div className="LoaderHolder">
-          <Loader
-            style={{
-              width: 300,
-              height: 300,
-              border: "5px dashed #909090",
-              borderTopColor: "transparent",
-              borderRightColor: "transparent"
-            }}
-          />
-        </div>
-      ) : (
-        <Card.Image
-          style={{ maxHeight: "450px", overflowY: "hidden" }}
-          src={props.profileImageUrl}
-        />
-      )}
-    </div>
-    <Card.Content>
-      <Media>
-        <Media.Item>
-          <Heading size={4}>Mary Jane</Heading>
-          <Heading subtitle size={6}>
-            @maryjane
-          </Heading>
-        </Media.Item>
-      </Media>
-      <Content>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus nec
-        iaculis mauris. <a>@goserverless</a> <a href="#1">#orchestration</a>{" "}
-        <a href="#2">#rules</a>
-        <br />
-        <time dateTime="2016-1-1">11:09 PM, 1 Jan 2016</time>
-      </Content>
-      <Card.Footer>
-        <Card.Footer.Item
-          renderAs="label"
-          htmlFor="uploadFile"
-          href="#Yes"
-          onClick={props.onUploadNewPicture}
-        >
-          New picture
-        </Card.Footer.Item>
-        <Card.Footer.Item
-          renderAs="a"
-          href="https://twitter.com/intent/tweet?text=Take+a+look+at+my+profile+@maryjane"
-        >
-          Share
-        </Card.Footer.Item>
-      </Card.Footer>
-    </Card.Content>
-  </Card>
-);
+import { Page, PLACEHOLDER_URL } from "./layout";
 
 // FIXME: never assume region
 function s3UrlToHttp(s3Url) {
@@ -89,13 +20,7 @@ function s3UrlToHttp(s3Url) {
   );
 }
 
-const UploadForm = props => (
-  <form className="hidden">
-    <input type="file" id="uploadFile" onChange={props.onFileChange} />
-  </form>
-);
-
-class App extends React.Component {
+class App extends Page {
   constructor(props) {
     super(props);
     this.state = {
@@ -104,12 +29,21 @@ class App extends React.Component {
       alertMessage: "",
       userId: null,
       token: null,
-      waitProcessing: false
+      waitProcessing: false,
+      alertClearTimeout: null
     };
     this.onMessage = this.onMessage.bind(this);
     this.onUploadComplete = this.onUploadComplete.bind(this);
-    this.onUploadNewPicture = this.onUploadNewPicture.bind(this);
+    this.onUploadButtonClicked = this.onUploadButtonClicked.bind(this);
     this.onUserRegistration = this.onUserRegistration.bind(this);
+  }
+
+  getUploadNewPictureHandler() {
+    return uploadFileHandlerGenerator(
+      this.state.userId,
+      this.onUploadButtonClicked,
+      this.onMessage
+    );
   }
 
   onUserRegistration(userId, token) {
@@ -135,6 +69,16 @@ class App extends React.Component {
         alertType: msg.type || "info"
       });
 
+      if (this.state.alertClearTimeout !== null) {
+        clearTimeout(this.state.alertClearTimeout);
+      }
+
+      this.setState({
+        alertClearTimeout: setTimeout(() => {
+          this.setState({ alertMessage: "" });
+        }, 2000)
+      });
+
       if (msg.code === "resize" && msg.thumbnailUrl) {
         const url = s3UrlToHttp(msg.thumbnailUrl);
         this.setState({
@@ -153,45 +97,13 @@ class App extends React.Component {
     }
   }
 
-  onUploadNewPicture() {
+  onUploadButtonClicked() {
     console.log("Button clicked");
   }
 
   onUploadComplete(bucket, key, url) {
     console.info("Upload complete", arguments);
     this.setState({ waitProcessing: true });
-  }
-
-  render() {
-    return (
-      <section className="section">
-        <div className="container">
-          <h1 className="title">{title}</h1>
-          <p className="subtitle">My awesome profile</p>
-          <div className="ProfileHolder">
-            <div className="TagHolder">
-              {this.state.alertMessage && (
-                <Tag color={this.state.alertType}>
-                  {this.state.alertMessage}
-                </Tag>
-              )}
-            </div>
-            <Profile
-              profileImageUrl={this.state.profileImageUrl}
-              onUploadNewPicture={this.onUploadNewPicture}
-              waitProcessing={this.state.waitProcessing}
-            />
-            <UploadForm
-              onFileChange={uploadFileHandlerGenerator(
-                this.state.userId,
-                this.onUploadComplete,
-                this.onMessage
-              )}
-            />
-          </div>
-        </div>
-      </section>
-    );
   }
 }
 
