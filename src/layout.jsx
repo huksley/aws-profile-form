@@ -60,8 +60,15 @@ export const Profile = props => (
       </Media>
       <Content>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus nec
-        iaculis mauris. <a>@goserverless</a> <a href="#1">#orchestration</a>{" "}
-        <a href="#2">#rules</a>
+        iaculis mauris.{" "}
+        <a href="https://twitter.com/goserverless">@goserverless</a>{" "}
+        <a href="https://twitter.com/search?q=%23microservice+%23orchestration">
+          #microservice
+        </a>{" "}
+        <a href="https://twitter.com/search?q=%23microservice+%23orchestration">
+          #orchestration
+        </a>{" "}
+        <a href="https://twitter.com/search?q=#amazing">#rules</a>
       </Content>
       <Content>
         <time dateTime="2016-1-1">11:09 PM, 1 Jan 2016</time>
