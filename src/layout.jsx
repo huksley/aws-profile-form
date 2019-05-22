@@ -1,8 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
-export const PLACEHOLDER_URL =
-  "https://imgplaceholder.com/800x600?text=Upload+new...";
+export const PLACEHOLDER_URL = "assets/placeholder.png";
 
 import {
   Card,
