@@ -32,18 +32,19 @@ class App extends Page {
       token: null,
       waitProcessing: false,
       alertClearTimeout: null,
-      fullName: getRandomName(true).join(" ")
+      fullName: getRandomName(true).join(" "),
+      faceExpressions: undefined
     };
     this.onMessage = this.onMessage.bind(this);
     this.onUploadComplete = this.onUploadComplete.bind(this);
-    this.onUploadButtonClicked = this.onUploadButtonClicked.bind(this);
     this.onUserRegistration = this.onUserRegistration.bind(this);
+    this.createUploadImageHandler = this.createUploadImageHandler.bind(this);
   }
 
-  getUploadNewPictureHandler() {
+  createUploadImageHandler() {
     return uploadFileHandlerGenerator(
       this.state.userId,
-      this.onUploadButtonClicked,
+      this.onUploadComplete,
       this.onMessage
     );
   }
@@ -63,44 +64,59 @@ class App extends Page {
     unsubscribeMessageHandler(this.onMessage);
   }
 
+  /**
+   *
+   */
   onMessage(msg) {
     console.log("New message", msg);
+
     if (msg && msg.message) {
       this.setState({
         alertMessage: msg.message,
-        alertType: msg.type || "info"
+        alertType: msg.type || "info",
+        waitProcessing: true
       });
+
+      if (msg.faces) {
+        this.setState({ faceExpressions: JSON.parse(msg.faces) });
+      }
 
       if (this.state.alertClearTimeout !== null) {
         clearTimeout(this.state.alertClearTimeout);
       }
 
-      this.setState({
-        alertClearTimeout: setTimeout(() => {
-          this.setState({ alertMessage: "" });
-        }, 5000)
-      });
-
-      if (msg.code === "resize" && msg.thumbnailUrl) {
+      if (msg.code === "resize") {
         const url = s3UrlToHttp(msg.thumbnailUrl);
         this.setState({
           profileImageUrl: url,
-          waitProcessing: false
+          waitProcessing: false,
+          // Dismissable
+          alertClearTimeout: setTimeout(() => {
+            this.setState({ alertMessage: "", alertClearTimeout: null });
+          }, 5000)
         });
-      }
-
-      if (msg.code === "rekognition-failed") {
+      } else if (msg.code === "rekognition-failed") {
         this.setState({
           alertType: "danger",
           profileImageUrl: PLACEHOLDER_URL,
-          waitProcessing: false
+          waitProcessing: false,
+          // Dismissable
+          alertClearTimeout: setTimeout(() => {
+            this.setState({ alertMessage: "", alertClearTimeout: null });
+          }, 5000)
+        });
+      } else if (msg.code === "resize-failed") {
+        this.setState({
+          alertType: "danger",
+          profileImageUrl: PLACEHOLDER_URL,
+          waitProcessing: false,
+          // Dismissable
+          alertClearTimeout: setTimeout(() => {
+            this.setState({ alertMessage: "", alertClearTimeout: null });
+          }, 5000)
         });
       }
     }
-  }
-
-  onUploadButtonClicked() {
-    console.log("Button clicked");
   }
 
   onUploadComplete(bucket, key, url) {
@@ -136,7 +152,9 @@ const uploadFileHandlerGenerator = (
   const targetFolder = "profile/";
 
   messageHandler({
-    message: "Uploading " + file.name
+    message: "Uploading " + file.name,
+    type: "info",
+    start: true
   });
   console.info("Generating a upload form", file);
   fetch(apiPath, {

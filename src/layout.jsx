@@ -26,26 +26,33 @@ export const UploadForm = props => (
 export const Profile = props => (
   <Card>
     <div className="CardImageHolder">
-      {props.waitProcessing ? (
+      {props.waitProcessing && (
         <div className="LoaderHolder">
           <Loader
             style={{
-              width: "100%",
-              height: "100%",
               border: "5px solid #b0b0b0",
               borderTopColor: "transparent",
               borderRightColor: "transparent"
             }}
           />
         </div>
-      ) : (
-        <Card.Image
-          onClick={() => {
-            document.getElementById("uploadFile").click();
-          }}
-          style={{ maxHeight: "450px", overflowY: "hidden" }}
-          src={props.profileImageUrl || PLACEHOLDER_URL}
-        />
+      )}
+
+      <Card.Image
+        onClick={() => {
+          document.getElementById("uploadFile").click();
+        }}
+        src={props.profileImageUrl || PLACEHOLDER_URL}
+      />
+
+      {props.faceExpressions && (
+        <div className="ExpressionOverlay">
+          {props.faceExpressions.isSmiling ? (
+            <i className="fas fa-smile" />
+          ) : (
+            <i className="fas fa-frown" />
+          )}
+        </div>
       )}
     </div>
     <Card.Content>
@@ -100,7 +107,7 @@ export class Page extends React.Component {
     this.state = {};
   }
 
-  getUploadNewPictureHandler() {
+  createUploadImageHandler() {
     return undefined;
   }
 
@@ -121,10 +128,9 @@ export class Page extends React.Component {
               profileImageUrl={this.state.profileImageUrl}
               waitProcessing={this.state.waitProcessing}
               fullName={this.state.fullName || "Mary Jane"}
+              faceExpressions={this.state.faceExpressions}
             />
-            <UploadForm
-              onFileChange={this.getUploadNewPictureHandler() || nop}
-            />
+            <UploadForm onFileChange={this.createUploadImageHandler() || nop} />
             <div className="footerLink">
               Serverless microservice orchestration demo by{" "}
               <a href="https://twitter.com/huksley_">huksley</a>

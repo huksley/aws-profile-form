@@ -52,8 +52,11 @@ $input-shadow: none;
 
 .LoaderHolder {
   display: block;
+  position: absolute;
   text-align: center;
   width: 100%;
+  z-index: 999999;
+  padding-top: 8px;
 }
 
 .LoaderHolder div {
@@ -64,8 +67,24 @@ $input-shadow: none;
   max-height: 450px;
 }
 
+.CardImageHolder figure.image {
+  max-height: "450px";
+  overflow-y: "hidden";
+}
+
 .footerLink {
   padding-top: 0.2em;
   text-align: center;
   font-size: 0.8em;
+}
+
+.ExpressionOverlay {
+  position: relative;
+  bottom: 30px;
+  left: 8px;
+}
+
+.ExpressionOverlay i {
+  color: yellow;
+  font-size: 1.2em;
 }
