@@ -38,6 +38,7 @@ messaging
   })
   .catch(function(err) {
     console.warn("Unable to get permission to notify.", err);
+    alert("Failed to request permissions, please allow notifications.");
   });
 
 let userId = null;
