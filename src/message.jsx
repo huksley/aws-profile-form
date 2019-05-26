@@ -119,23 +119,35 @@ messaging.onTokenRefresh(function() {
     });
 });
 
-// Handle incoming messages. Called when:
+// Handle Google FCM incoming messages. Called when:
 // - a message is received while the app has focus
 // - the user clicks on an app notification created by a service worker
 //   `messaging.setBackgroundMessageHandler` handler.
 messaging.onMessage(function(payload) {
   console.info("Message received", payload);
+  handleIncomingMessage(payload);
+});
+
+const handleIncomingMessage = msg => {
   handlers.forEach(handler => {
     try {
-      handler(payload.data);
+      handler(msg.data);
     } catch (e) {
-      console.warn("Failed to send message to handler " + handler, payload);
+      console.warn("Failed to send message to handler " + handler, msg);
     }
   });
-});
+};
 
 let handlers = [];
 let registrationHandlers = [];
+
+if ("serviceWorker" in navigator) {
+  // Handler for messages coming from the service worker
+  navigator.serviceWorker.addEventListener("message", function(event) {
+    console.info("Client received message", event);
+    handleIncomingMessage(event);
+  });
+}
 
 export function subscribeMessageHandler(handler, registrationHandler) {
   console.info("Adding subscription for messages");

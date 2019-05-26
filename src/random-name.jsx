@@ -1,3 +1,6 @@
+/**
+ * Generates random name, loosely based on docker algorithm
+ */
 export const getRandomName = capitalName => {
   const left = [
     "admiring",
@@ -219,14 +222,11 @@ export const getRandomName = capitalName => {
   let rv = right[ri];
 
   if (capitalName) {
-    return (
-      lv.substring(0, 1).toUpperCase() +
-      lv.substring(1) +
-      " " +
-      rv.substring(0, 1).toUpperCase() +
-      rv.substring(1)
-    );
+    return [
+      lv.substring(0, 1).toUpperCase() + lv.substring(1),
+      rv.substring(0, 1).toUpperCase() + rv.substring(1)
+    ];
   }
 
-  return lv + " " + rv;
+  return [lv, rv];
 };

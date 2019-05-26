@@ -32,7 +32,7 @@ class App extends Page {
       token: null,
       waitProcessing: false,
       alertClearTimeout: null,
-      fullName: getRandomName(true)
+      fullName: getRandomName(true).join(" ")
     };
     this.onMessage = this.onMessage.bind(this);
     this.onUploadComplete = this.onUploadComplete.bind(this);

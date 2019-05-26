@@ -12,16 +12,39 @@ firebase.initializeApp({
   messagingSenderId: process.env.FCM_MESSAGING_SENDERID
 });
 
+const showNotification = false;
+
 const messaging = firebase.messaging();
 
-messaging.setBackgroundMessageHandler(function(payload) {
-  console.info(
-    "[firebase-messaging-sw.js] Received background messages",
-    payload
-  );
+/**
+ * https://serviceworke.rs/immediate-claim.html
+ */
+self.addEventListener("install", event => {
+  console.info("Service worker - install");
+  event.waitUntil(self.skipWaiting());
+});
 
-  var notificationTitle = "Notification";
-  var notificationOptions = {
+self.addEventListener("activate", event => {
+  console.info("Service worker - activate");
+  event.waitUntil(self.clients.claim());
+});
+
+messaging.setBackgroundMessageHandler(function(payload) {
+  console.info("Received background message", payload);
+
+  clients
+    .matchAll({ includeUncontrolled: true, type: "window" })
+    .then(clients =>
+      clients.forEach(client => {
+        console.info("Sending background message to client", client);
+        return client.postMessage(payload.data);
+      })
+    );
+
+  // We MUST show notification or Google FCM will generate some default one 
+  // (This site has been updated in the background)
+  const notificationTitle = "Notification";
+  const notificationOptions = {
     body: payload.message
       ? payload.message
       : payload.data && payload.data.message

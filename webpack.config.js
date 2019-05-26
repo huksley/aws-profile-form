@@ -78,10 +78,13 @@ const clientConfig = {
     new CopyWebpackPlugin([
       { from: "assets", to: "assets/" },
       { from: "public" },
+      // Service worker for processing Google FCM messages (no webpack.DefinePlugin so process constants manually)
       { from: "src/firebase-messaging-sw.js", transform: (content) => {
-        let s = String(content).replace("process.env.FCM_MESSAGING_SENDERID", JSON.stringify(process.env.FCM_MESSAGING_SENDERID))
+        let s = String(content)
+        s = s.replace("process.env.FCM_MESSAGING_SENDERID", JSON.stringify(process.env.FCM_MESSAGING_SENDERID))
         return s
       }},
+      // Firebase libraries for service worker
       { from: "node_modules/firebase/firebase-app.js", to: "worker/firebaseApp.js" },
       { from: "node_modules/firebase/firebase-messaging.js", to: "worker/firebaseMessaging.js" }
     ]),
