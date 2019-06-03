@@ -72,7 +72,7 @@ function registerUser(token) {
     .then(r => {
       console.info("User registered, userId: " + r.userId);
       userId = r.userId;
-      registrationHandlers.forEach(f => f(userId, token));
+      registrationHandlers.forEach(f => f(userId, token, r));
     })
     .catch(err => {
       console.warn("Failed to register user", err);
@@ -129,14 +129,18 @@ messaging.onMessage(function(payload) {
   handleIncomingMessage(payload);
 });
 
-const handleIncomingMessage = msg => {
+const sendToHandlers = data => {
   handlers.forEach(handler => {
     try {
-      handler(msg.data);
+      handler(data);
     } catch (e) {
       console.warn("Failed to send message to handler " + handler, msg);
     }
   });
+};
+
+const handleIncomingMessage = msg => {
+  sendToHandlers(msg.data);
 };
 
 let handlers = [];

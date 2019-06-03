@@ -49,11 +49,17 @@ class App extends Page {
     );
   }
 
-  onUserRegistration(userId, token) {
+  onUserRegistration(userId, token, data) {
     this.setState({
       userId,
       token
     });
+
+    if (data && data.fields && data.fields.thumbnailUrl) {
+      this.setState({
+        profileImageUrl: s3UrlToHttp(data.fields.thumbnailUrl)
+      });
+    }
   }
 
   componentDidMount() {
