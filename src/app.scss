@@ -28,6 +28,10 @@ $input-shadow: none;
 
 @import "~@fortawesome/fontawesome-free/css/all.css";
 
+div#app {
+  max-width: 30em;
+}
+
 .hidden {
   display: none;
 }
@@ -43,11 +47,14 @@ $input-shadow: none;
 .ProfileHolder .TagHolder {
   text-align: center;
   display: block;
-  position: fixed;
-  top: 0px;
+  position: absolute;
   z-index: 99999;
   width: 100%;
-  padding-top: 2px;
+  padding-top: 4px;
+}
+
+.TagHolder span {
+  font-size: 1.2em;
 }
 
 .LoaderHolder {
@@ -56,7 +63,7 @@ $input-shadow: none;
   text-align: center;
   width: 100%;
   z-index: 999999;
-  padding-top: 8px;
+  padding-top: 3em;
 }
 
 .LoaderHolder div {
@@ -80,11 +87,13 @@ $input-shadow: none;
 
 .ExpressionOverlay {
   position: relative;
-  bottom: 30px;
-  left: 8px;
+  bottom: 4em;
+  left: 0.8em;
 }
 
 .ExpressionOverlay i {
   color: yellow;
-  font-size: 1.2em;
+  font-size: 3em;
+  x-nah-border-radius: 1.5em;
+  x-nah-border: 3px solid black;
 }

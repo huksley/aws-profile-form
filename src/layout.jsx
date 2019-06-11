@@ -30,9 +30,11 @@ export const Profile = props => (
         <div className="LoaderHolder">
           <Loader
             style={{
-              border: "5px solid #b0b0b0",
+              border: "12px solid #209cee",
               borderTopColor: "transparent",
-              borderRightColor: "transparent"
+              borderRightColor: "transparent",
+              width: "8em",
+              height: "8em"
             }}
           />
         </div>

@@ -158,7 +158,7 @@ const uploadFileHandlerGenerator = (
   const targetFolder = "profile/";
 
   messageHandler({
-    message: "Uploading " + file.name,
+    message: "Uploading",
     type: "info",
     start: true
   });
