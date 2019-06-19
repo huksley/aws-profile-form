@@ -4,6 +4,8 @@ Demo social network profile page with face and smile recognition. Built on AWS R
 
 Asynchronious notification handled by Google Cloud Messaging.
 
+[![Sponsored](https://img.shields.io/badge/chilicorn-sponsored-brightgreen.svg)](http://spiceprogram.org/oss-sponsorship/)
+
 ## Architecture
 
 ![Architecture](architecture.png)
