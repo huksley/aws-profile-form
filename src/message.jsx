@@ -1,4 +1,5 @@
 import * as firebase from "firebase/app";
+/** Magically loads messaging into firebase namespace */
 import "firebase/messaging";
 import * as R from "ramda";
 
@@ -162,12 +163,8 @@ export function subscribeMessageHandler(handler, registrationHandler) {
 
 export function unsubscribeMessageHandler(handler, registrationHandler) {
   console.info("Removing subscription for messages");
-  handlers = R.reject(f => f === handler);
-  registrationHandlers = R.reject(f => f === registrationHandler);
+  handlers = handlers.filter(f => f !== handler, handlers);
+  registrationHandlers = registrationHandlers.filter(
+    f => f !== registrationHandler
+  );
 }
-
-window.onunload = function() {
-  if (userId) {
-    unregisterUser();
-  }
-};

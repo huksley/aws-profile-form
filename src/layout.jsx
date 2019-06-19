@@ -23,85 +23,111 @@ export const UploadForm = props => (
   </form>
 );
 
-export const Profile = props => (
-  <Card>
-    <div className="CardImageHolder">
-      {props.waitProcessing && (
-        <div className="LoaderHolder">
-          <Loader
-            style={{
-              border: "12px solid #209cee",
-              borderTopColor: "transparent",
-              borderRightColor: "transparent",
-              width: "8em",
-              height: "8em"
-            }}
+export class Profile extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { profileImageUrl: props.profileImageUrl };
+    this.clickProfileImage = this.clickProfileImage.bind(this);
+    this.restorePlaceHolderImage = this.restorePlaceHolderImage.bind(this);
+  }
+
+  componentWillReceiveProps(props) {
+    this.setState({ profileImageUrl: props.profileImageUrl });
+  }
+
+  clickProfileImage() {
+    const uploadField = document.getElementById("uploadFile");
+    if (uploadField) {
+      uploadField.click();
+    }
+  }
+
+  restorePlaceHolderImage() {
+    this.setState({ profileImageUrl: undefined });
+  }
+
+  render() {
+    return (
+      <Card>
+        <div className="CardImageHolder">
+          {this.props.waitProcessing && (
+            <div className="LoaderHolder">
+              <Loader
+                style={{
+                  border: "12px solid #209cee",
+                  borderTopColor: "transparent",
+                  borderRightColor: "transparent",
+                  width: "8em",
+                  height: "8em"
+                }}
+              />
+            </div>
+          )}
+
+          <Card.Image
+            className="ProfileImage"
+            onClick={this.clickProfileImage}
+            onError={this.restorePlaceHolderImage}
+            src={this.state.profileImageUrl || PLACEHOLDER_URL}
           />
-        </div>
-      )}
 
-      <Card.Image
-        onClick={() => {
-          document.getElementById("uploadFile").click();
-        }}
-        src={props.profileImageUrl || PLACEHOLDER_URL}
-      />
-
-      {props.faceExpressions && (
-        <div className="ExpressionOverlay">
-          {props.faceExpressions.isSmiling ? (
-            <i className="fas fa-smile" />
-          ) : (
-            <i className="fas fa-frown" />
+          {this.props.faceExpressions && (
+            <div className="ExpressionOverlay">
+              {this.props.faceExpressions.isSmiling ? (
+                <i className="fas fa-smile" />
+              ) : (
+                <i className="fas fa-frown" />
+              )}
+            </div>
           )}
         </div>
-      )}
-    </div>
-    <Card.Content>
-      <Media>
-        <Media.Item>
-          <Heading size={4}>{props.fullName}</Heading>
-          <Heading subtitle size={6}>
-            @{props.fullName.toLowerCase().replace(" ", "")}
-          </Heading>
-        </Media.Item>
-      </Media>
-      <Content>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus nec
-        iaculis mauris.{" "}
-        <a href="https://twitter.com/goserverless">@goserverless</a>{" "}
-        <a href="https://twitter.com/search?q=%23microservice+%23orchestration">
-          #microservice
-        </a>{" "}
-        <a href="https://twitter.com/search?q=%23microservice+%23orchestration">
-          #orchestration
-        </a>{" "}
-        <a href="https://twitter.com/search?q=#amazing">#rules</a>
-      </Content>
-      <Content>
-        <time dateTime="2016-1-1">11:09 PM, 1 Jan 2016</time>
-      </Content>
-    </Card.Content>
-    <Card.Footer>
-      <Card.Footer.Item
-        renderAs="label"
-        htmlFor="uploadFile"
-        href="#uploadNewPicture"
-      >
-        <i className="fas fa-camera"> </i>&nbsp;New picture
-      </Card.Footer.Item>
-      <Card.Footer.Item
-        renderAs="a"
-        href={
-          "https://twitter.com/intent/tweet?text=Take+a+look+at+my+amazing+new+profile+@" +
-          props.fullName.toLowerCase().replace(" ", "")
-        }
-      >
-        <i className="fab fa-twitter"> </i>&nbsp;Share
-      </Card.Footer.Item>
-    </Card.Footer>
-  </Card>
-);
+        <Card.Content>
+          <Media>
+            <Media.Item>
+              <Heading size={4}>{this.props.fullName}</Heading>
+              <Heading subtitle size={6}>
+                @{this.props.fullName.toLowerCase().replace(" ", "")}
+              </Heading>
+            </Media.Item>
+          </Media>
+          <Content>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus
+            nec iaculis mauris.{" "}
+            <a href="https://twitter.com/goserverless">@goserverless</a>{" "}
+            <a href="https://twitter.com/search?q=%23microservice+%23orchestration">
+              #microservice
+            </a>{" "}
+            <a href="https://twitter.com/search?q=%23microservice+%23orchestration">
+              #orchestration
+            </a>{" "}
+            <a href="https://twitter.com/search?q=#amazing">#rules</a>
+          </Content>
+          <Content>
+            <time dateTime="2016-1-1">11:09 PM, 1 Jan 2016</time>
+          </Content>
+        </Card.Content>
+        <Card.Footer>
+          <Card.Footer.Item
+            renderAs="label"
+            htmlFor="uploadFile"
+            href="#uploadNewPicture"
+          >
+            <i className="fas fa-camera"> </i>&nbsp;New picture
+          </Card.Footer.Item>
+          <Card.Footer.Item
+            renderAs="a"
+            href={
+              "https://twitter.com/intent/tweet?text=Take+a+look+at+my+amazing+new+profile+@" +
+              this.props.fullName.toLowerCase().replace(" ", "")
+            }
+          >
+            <i className="fab fa-twitter"> </i>&nbsp;Share
+          </Card.Footer.Item>
+        </Card.Footer>
+      </Card>
+    );
+  }
+}
 
 export class Page extends React.Component {
   constructor(props) {

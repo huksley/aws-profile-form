@@ -29,7 +29,7 @@ $input-shadow: none;
 @import "~@fortawesome/fontawesome-free/css/all.css";
 
 div#app {
-  max-width: 30em;
+  max-width: 30em !important;
 }
 
 .hidden {

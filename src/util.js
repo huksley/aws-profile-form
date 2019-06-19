@@ -19,3 +19,12 @@ export const urlToKeyName = s3Url => {
     throw new Error("Unsupported protocol: " + s3Url);
   }
 };
+
+export const s3UrlToHttp = (s3Url) => {
+  return (
+    "https://" +
+    urlToBucketName(s3Url) +
+    ".s3-" + process.env.AWS_REGION + ".amazonaws.com/" +
+    urlToKeyName(s3Url)
+  );
+}

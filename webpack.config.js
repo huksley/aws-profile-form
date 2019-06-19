@@ -112,6 +112,9 @@ const clientConfig = {
       ),
       "process.env.FCM_APPID": JSON.stringify(
         process.env.FCM_APPID || ""
+      ),
+      "process.env.AWS_REGION": JSON.stringify(
+        process.env.AWS_REGION || "eu-west-1"
       )
     }),
   ]
