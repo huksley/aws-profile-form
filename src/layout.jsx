@@ -71,15 +71,18 @@ export class Profile extends React.Component {
             src={this.state.profileImageUrl || PLACEHOLDER_URL}
           />
 
-          {this.props.faceExpressions && (
-            <div className="ExpressionOverlay">
-              {this.props.faceExpressions.isSmiling ? (
+          <div className="ExpressionOverlay">
+            {this.props.faceExpressions &&
+              this.props.faceExpressions.isSmiling && (
                 <i className="fas fa-smile" />
-              ) : (
+              )}
+            {this.props.faceExpressions &&
+              !this.props.faceExpressions.isSmiling && (
                 <i className="fas fa-frown" />
               )}
-            </div>
-          )}
+            {this.props.otherProfiles &&
+              this.props.otherProfiles.map(url => <img src={url} width="48" />)}
+          </div>
         </div>
         <Card.Content>
           <Media>
@@ -157,6 +160,7 @@ export class Page extends React.Component {
               waitProcessing={this.state.waitProcessing}
               fullName={this.state.fullName || "Mary Jane"}
               faceExpressions={this.state.faceExpressions}
+              otherProfiles={this.state.otherProfiles}
             />
             <UploadForm onFileChange={this.createUploadImageHandler() || nop} />
             <div className="footerLink">

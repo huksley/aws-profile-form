@@ -24,7 +24,8 @@ class App extends Page {
       waitProcessing: false,
       alertClearTimeout: null,
       fullName: getRandomName(true).join(" "),
-      faceExpressions: undefined
+      faceExpressions: undefined,
+      otherProfiles: []
     };
     this.onMessage = this.onMessage.bind(this);
     this.onUploadComplete = this.onUploadComplete.bind(this);
@@ -67,18 +68,26 @@ class App extends Page {
    * Receive new message
    */
   onMessage(msg) {
-    console.log("New message", msg);
-
     if (msg && msg.message) {
-      if (msg.code === "new-user" || msg.code === "user-online") {
+      console.info("New message", msg);
+
+      if (
+        msg.code === "new-user" ||
+        msg.code === "user-online" ||
+        (msg.code === "user-pic" && msg.userId === this.state.userId)
+      ) {
         // Ignore these topic messages for now
+        console.info("Ignoring message", msg);
         return;
       }
-      this.setState({
-        alertMessage: msg.message,
-        alertType: msg.type || "info",
-        waitProcessing: true
-      });
+
+      if (msg.code !== "user-pic") {
+        this.setState({
+          alertMessage: msg.message,
+          alertType: msg.type || "info",
+          waitProcessing: true
+        });
+      }
 
       if (msg.faces) {
         this.setState({ faceExpressions: JSON.parse(msg.faces) });
@@ -88,7 +97,12 @@ class App extends Page {
         clearTimeout(this.state.alertClearTimeout);
       }
 
-      if (msg.code === "resize") {
+      if (msg.code === "user-pic" && msg.userId !== this.state.userId) {
+        const url = s3UrlToHttp(msg.thumbnailUrl);
+        this.setState({
+          otherProfiles: this.state.otherProfiles.concat(url)
+        });
+      } else if (msg.code === "resize") {
         const url = s3UrlToHttp(msg.thumbnailUrl);
         this.setState({
           profileImageUrl: url,

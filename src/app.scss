@@ -94,6 +94,12 @@ div#app {
 .ExpressionOverlay i {
   color: yellow;
   font-size: 3em;
-  x-nah-border-radius: 1.5em;
-  x-nah-border: 3px solid black;
+  padding: 5px;
+  padding-bottom: 10px;
+  vertical-align: bottom;
+}
+
+.ExpressionOverlay img {
+  border: 1px solid black;
+  margin: 4px;
 }
