@@ -64,12 +64,16 @@ class App extends Page {
   }
 
   /**
-   *
+   * Receive new message
    */
   onMessage(msg) {
     console.log("New message", msg);
 
     if (msg && msg.message) {
+      if (msg.code === "new-user" || msg.code === "user-online") {
+        // Ignore these topic messages for now
+        return;
+      }
       this.setState({
         alertMessage: msg.message,
         alertType: msg.type || "info",
