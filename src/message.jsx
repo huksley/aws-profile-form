@@ -1,7 +1,7 @@
 import * as firebase from "firebase/app";
+
 /** Magically loads messaging into firebase namespace */
 import "firebase/messaging";
-import * as R from "ramda";
 
 firebase.initializeApp({
   apiKey: process.env.FCM_APIKEY,

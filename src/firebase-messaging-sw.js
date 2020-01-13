@@ -12,18 +12,19 @@ firebase.initializeApp({
   messagingSenderId: process.env.FCM_MESSAGING_SENDERID
 });
 
+const appVersion = process.env.CODE_VERSION;
 const messaging = firebase.messaging();
 
 /**
  * https://serviceworke.rs/immediate-claim.html
  */
 self.addEventListener("install", event => {
-  console.info("Service worker - install");
+  console.info("Service worker - install " + appVersion);
   event.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener("activate", event => {
-  console.info("Service worker - activate");
+  console.info("Service worker - activate " + appVersion);
   event.waitUntil(self.clients.claim());
 });
 
@@ -50,7 +51,7 @@ messaging.setBackgroundMessageHandler(function(payload) {
    * We MUST show notification or Google FCM will generate some default one
    * (This site has been updated in the background)
    */
-  const notificationTitle = "Notification";
+  const notificationTitle = appVersion + " FindFace";
   const notificationOptions = {
     body: payload.message
       ? payload.message

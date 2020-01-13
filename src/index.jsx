@@ -5,9 +5,10 @@ import ReactDOM from "react-dom";
 // Preprocessed in webpack to real variables
 const presignedFormEndpoint = process.env.API_UPLOAD_HANDLER_URL;
 const imageBucket = process.env.IMAGE_BUCKET;
+const appVersion = process.env.CODE_VERSION;
 
 import { unsubscribeMessageHandler, subscribeMessageHandler } from "./message";
-import { urlToBucketName, urlToKeyName, s3UrlToHttp } from "./util";
+import { s3UrlToHttp } from "./util";
 import { Page, PLACEHOLDER_URL } from "./layout";
 import { getRandomName } from "./random-name";
 import { uploadFileHandlerGenerator } from "./upload";
@@ -31,6 +32,7 @@ class App extends Page {
     this.onUploadComplete = this.onUploadComplete.bind(this);
     this.onUserRegistration = this.onUserRegistration.bind(this);
     this.createUploadImageHandler = this.createUploadImageHandler.bind(this);
+    console.info("Starting app " + appVersion);
   }
 
   createUploadImageHandler() {

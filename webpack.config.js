@@ -7,6 +7,12 @@ const CopyWebpackPlugin = require("copy-webpack-plugin");
 const CleanWebpackPlugin = require("clean-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const child_process = require("child_process");
+
+// Obtain hash of current git version or tag
+var gitHash = child_process.execSync("git rev-parse --short HEAD", {
+  encoding: "utf8"
+});
 
 const clientConfig = {
   entry: {
@@ -79,14 +85,30 @@ const clientConfig = {
       { from: "assets", to: "assets/" },
       { from: "public" },
       // Service worker for processing Google FCM messages (no webpack.DefinePlugin so process constants manually)
-      { from: "src/firebase-messaging-sw.js", transform: (content) => {
-        let s = String(content)
-        s = s.replace("process.env.FCM_MESSAGING_SENDERID", JSON.stringify(process.env.FCM_MESSAGING_SENDERID))
-        return s
-      }},
+      {
+        from: "src/firebase-messaging-sw.js",
+        transform: content => {
+          let s = String(content);
+          s = s.replace(
+            "process.env.FCM_MESSAGING_SENDERID",
+            JSON.stringify(process.env.FCM_MESSAGING_SENDERID || "undefined")
+          );
+          s = s.replace(
+            "process.env.CODE_VERSION",
+            JSON.stringify(gitHash.trim())
+          );
+          return s;
+        }
+      },
       // Firebase libraries for service worker
-      { from: "node_modules/firebase/firebase-app.js", to: "worker/firebaseApp.js" },
-      { from: "node_modules/firebase/firebase-messaging.js", to: "worker/firebaseMessaging.js" }
+      {
+        from: "node_modules/firebase/firebase-app.js",
+        to: "worker/firebaseApp.js"
+      },
+      {
+        from: "node_modules/firebase/firebase-messaging.js",
+        to: "worker/firebaseMessaging.js"
+      }
     ]),
     // During the build make literal replacements on client side for
     // configuration values, because there is no process.env
@@ -107,16 +129,13 @@ const clientConfig = {
       "process.env.FCM_VAPID_KEY": JSON.stringify(
         process.env.FCM_VAPID_KEY || ""
       ),
-      "process.env.FCM_APIKEY": JSON.stringify(
-        process.env.FCM_APIKEY || ""
-      ),
-      "process.env.FCM_APPID": JSON.stringify(
-        process.env.FCM_APPID || ""
-      ),
+      "process.env.FCM_APIKEY": JSON.stringify(process.env.FCM_APIKEY || ""),
+      "process.env.FCM_APPID": JSON.stringify(process.env.FCM_APPID || ""),
       "process.env.AWS_REGION": JSON.stringify(
         process.env.AWS_REGION || "eu-west-1"
-      )
-    }),
+      ),
+      "process.env.CODE_VERSION": JSON.stringify(gitHash.trim())
+    })
   ]
 };
 
