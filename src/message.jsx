@@ -130,21 +130,21 @@ messaging.onMessage(function(payload) {
   handleIncomingMessage(payload);
 });
 
-const sendToHandlers = data => {
-  handlers.forEach(handler => {
+const sendToMessageHandlers = data => {
+  messageHandlers.forEach(messageHandler => {
     try {
-      handler(data);
+      messageHandler(data);
     } catch (e) {
-      console.warn("Failed to send message to handler " + handler, msg);
+      console.warn("Failed to send message to handler " + messageHandler, msg);
     }
   });
 };
 
 const handleIncomingMessage = msg => {
-  sendToHandlers(msg.data);
+  sendToMessageHandlers(msg.data);
 };
 
-let handlers = [];
+let messageHandlers = [];
 let registrationHandlers = [];
 
 if ("serviceWorker" in navigator) {
@@ -157,13 +157,13 @@ if ("serviceWorker" in navigator) {
 
 export function subscribeMessageHandler(handler, registrationHandler) {
   console.info("Adding subscription for messages");
-  handlers[handlers.length] = handler;
+  messageHandlers[messageHandlers.length] = handler;
   registrationHandlers[registrationHandlers.length] = registrationHandler;
 }
 
 export function unsubscribeMessageHandler(handler, registrationHandler) {
   console.info("Removing subscription for messages");
-  handlers = handlers.filter(f => f !== handler, handlers);
+  messageHandlers = messageHandlers.filter(f => f !== handler, messageHandlers);
   registrationHandlers = registrationHandlers.filter(
     f => f !== registrationHandler
   );

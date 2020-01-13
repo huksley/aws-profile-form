@@ -47,7 +47,7 @@ messaging.setBackgroundMessageHandler(function(payload) {
     );
 
   /**
-   * We MUST show notification or Google FCM will generate some default one 
+   * We MUST show notification or Google FCM will generate some default one
    * (This site has been updated in the background)
    */
   const notificationTitle = "Notification";
@@ -56,8 +56,9 @@ messaging.setBackgroundMessageHandler(function(payload) {
       ? payload.message
       : payload.data && payload.data.message
       ? payload.data.message
-      : "No message",
-    icon: location.origin + "/assets/firebase-logo.png"
+      : "No message (" + JSON.stringify(payload.data) + ")",
+    icon: location.origin + "/assets/firebase-logo.png",
+    silent: true
   };
 
   return self.registration.showNotification(
