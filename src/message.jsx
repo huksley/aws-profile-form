@@ -13,7 +13,14 @@ firebase.initializeApp({
   appId: process.env.FCM_APPID
 });
 
-const messaging = firebase.messaging();
+const messaging = (() => {
+  try {
+    return firebase.messaging();
+  } catch (e) {
+    console.warn("Failed to obtain messaging: " + e.message, e);
+    alert("Messaging not supported: " + e.message);
+  }
+})();
 
 messaging.usePublicVapidKey(process.env.FCM_VAPID_KEY);
 
@@ -164,8 +171,11 @@ let registrationHandlers = [];
 if ("serviceWorker" in navigator) {
   // Handler for messages coming from the service worker
   navigator.serviceWorker.addEventListener("message", function(event) {
-    console.info("Client received message", event);
-    handleIncomingMessage(event);
+    console.info(
+      "Client received message",
+      event.data["firebase-messaging-msg-data"]
+    );
+    handleIncomingMessage(event.data["firebase-messaging-msg-data"]);
   });
 }
 
