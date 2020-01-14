@@ -22,7 +22,7 @@ class App extends Page {
       alertMessage: "",
       userId: null,
       token: null,
-      waitProcessing: false,
+      waitProcessing: true,
       alertClearTimeout: null,
       fullName: getRandomName(true).join(" "),
       faceExpressions: undefined,
@@ -32,6 +32,7 @@ class App extends Page {
     this.onUploadComplete = this.onUploadComplete.bind(this);
     this.onUserRegistration = this.onUserRegistration.bind(this);
     this.createUploadImageHandler = this.createUploadImageHandler.bind(this);
+    this.disableNotifications = this.disableNotifications.bind(this);
     console.info("Starting app " + appVersion);
   }
 
@@ -45,10 +46,23 @@ class App extends Page {
     );
   }
 
+  disableNotifications(event) {
+    event.stopPropagation();
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+      for (let registration of registrations) {
+        console.info("Unregistering service worker", registration);
+        registration.unregister();
+        this.setState({ alertMessage: "Stopped. Reload or close tab." });
+      }
+    });
+    return false;
+  }
+
   onUserRegistration(userId, token, data) {
     this.setState({
       userId,
-      token
+      token,
+      waitProcessing: false
     });
 
     if (data && data.fields && data.fields.thumbnailUrl) {

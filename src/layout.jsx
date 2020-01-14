@@ -131,6 +131,11 @@ export class Profile extends React.Component {
   }
 }
 
+const shortId = userId =>
+  userId && userId.indexOf("-")
+    ? userId.substring(0, userId.indexOf("-"))
+    : userId;
+
 export class Page extends React.Component {
   constructor(props) {
     super(props);
@@ -165,6 +170,15 @@ export class Page extends React.Component {
             <div className="footerLink">
               Serverless microservice orchestration demo by{" "}
               <a href="https://twitter.com/huksley_">huksley</a>
+            </div>
+
+            <div className="footerLink">
+              {this.state.userId
+                ? "UserId: " + shortId(this.state.userId)
+                : "Loading..."}{" "}
+              <a href="#" onClick={e => this.disableNotifications(e)}>
+                Disable notifications
+              </a>
             </div>
           </div>
         </Container>

@@ -28,11 +28,16 @@ self.addEventListener("activate", event => {
   event.waitUntil(self.clients.claim());
 });
 
+const shortId = userId =>
+  userId && userId.indexOf("-")
+    ? userId.substring(0, userId.indexOf("-"))
+    : userId;
+
 /**
  * Handle incoming background (tab not in focus) message
  */
 messaging.setBackgroundMessageHandler(function(payload) {
-  console.info("Received background message", payload);
+  console.info("Received background message", JSON.stringify(payload));
 
   /**
    * Deliver it to active browser tab.
@@ -47,23 +52,35 @@ messaging.setBackgroundMessageHandler(function(payload) {
       })
     );
 
-  /**
-   * We MUST show notification or Google FCM will generate some default one
-   * (This site has been updated in the background)
-   */
-  const notificationTitle = appVersion + " FindFace";
-  const notificationOptions = {
-    body: payload.message
-      ? payload.message
-      : payload.data && payload.data.message
-      ? payload.data.message
-      : "No message (" + JSON.stringify(payload.data) + ")",
-    icon: location.origin + "/assets/firebase-logo.png",
-    silent: true
-  };
+  try {
+    const notificationTitle =
+      appVersion +
+      " FindFace" +
+      (payload.data && payload.data.code ? " " + payload.data.code : "");
+    const notificationOptions = {
+      body:
+        (payload.data && payload.data.message
+          ? payload.data.message
+          : payload.message
+          ? payload.message
+          : "No message") +
+        (payload.data && payload.data.userId
+          ? " " + shortId(payload.data.userId)
+          : ""),
+      icon: location.origin + "/assets/firebase-logo.png",
+      silent: true
+    };
 
-  return self.registration.showNotification(
-    notificationTitle,
-    notificationOptions
-  );
+    /**
+     * We MUST show notification or Google FCM will generate some default one
+     * (This site has been updated in the background)
+     */
+    console.info("Show notification " + notificationTitle);
+    return self.registration.showNotification(
+      notificationTitle,
+      notificationOptions
+    );
+  } catch (e) {
+    console.warn("Failed to show notification: " + e.message, e);
+  }
 });

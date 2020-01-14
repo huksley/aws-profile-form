@@ -14,36 +14,50 @@ firebase.initializeApp({
 });
 
 const messaging = firebase.messaging();
+
 messaging.usePublicVapidKey(process.env.FCM_VAPID_KEY);
 
 const msgPath = process.env.API_MESSAGING_URL;
 
+let userId = null;
+let token = null;
+let tokenTries = 5;
+
+const retrieveToken = () => {
+  messaging
+    .getToken()
+    .then(currentToken => {
+      if (currentToken) {
+        console.info("Got token", currentToken);
+        token = currentToken;
+        registerUser(currentToken);
+      } else {
+        console.info("No Instance ID token available.");
+        if (tokenTries) {
+          tokenTries--;
+          window.setTimeout(retrieveToken, 100);
+        }
+      }
+    })
+    .catch(function(err) {
+      console.warn("An error occurred while retrieving token. ", err);
+      if (tokenTries) {
+        tokenTries--;
+        window.setTimeout(retrieveToken, 100);
+      }
+    });
+};
+
 messaging
   .requestPermission()
-  .then(function() {
+  .then(() => {
     console.info("Notification permission granted.");
-    messaging
-      .getToken()
-      .then(function(currentToken) {
-        if (currentToken) {
-          console.info("Got token", currentToken);
-          token = currentToken;
-          registerUser(currentToken);
-        } else {
-          console.info("No Instance ID token available.");
-        }
-      })
-      .catch(function(err) {
-        console.warn("An error occurred while retrieving token. ", err);
-      });
+    retrieveToken();
   })
   .catch(function(err) {
     console.warn("Unable to get permission to notify.", err);
     alert("Failed to request permissions, please allow notifications.");
   });
-
-let userId = null;
-let token = null;
 
 function registerUser(token) {
   fetch(msgPath, {
@@ -155,9 +169,9 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-export function subscribeMessageHandler(handler, registrationHandler) {
+export function subscribeMessageHandler(messageHandler, registrationHandler) {
   console.info("Adding subscription for messages");
-  messageHandlers[messageHandlers.length] = handler;
+  messageHandlers[messageHandlers.length] = messageHandler;
   registrationHandlers[registrationHandlers.length] = registrationHandler;
 }
 
