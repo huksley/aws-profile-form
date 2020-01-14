@@ -18,7 +18,12 @@ const nop = () => {};
 
 export const UploadForm = props => (
   <form className="hidden">
-    <input type="file" id="uploadFile" onChange={props.onFileChange || nop} />
+    <input
+      type="file"
+      id="uploadFile"
+      disabled={props.disabled}
+      onChange={props.onFileChange || nop}
+    />
   </form>
 );
 
@@ -151,7 +156,11 @@ export class Page extends React.Component {
       <Section>
         <Container>
           <h1 className="title">My social app</h1>
-          <div className="ProfileHolder">
+          <div
+            className={
+              "ProfileHolder " + (this.state.waitProcessing ? " disabled" : "")
+            }
+          >
             <div className="TagHolder">
               {this.state.alertMessage && (
                 <Tag color={this.state.alertType}>
@@ -159,6 +168,7 @@ export class Page extends React.Component {
                 </Tag>
               )}
             </div>
+
             <Profile
               profileImageUrl={this.state.profileImageUrl}
               waitProcessing={this.state.waitProcessing}
@@ -166,9 +176,14 @@ export class Page extends React.Component {
               faceExpressions={this.state.faceExpressions}
               otherProfiles={this.state.otherProfiles}
             />
-            <UploadForm onFileChange={this.createUploadImageHandler() || nop} />
+
+            <UploadForm
+              disabled={this.state.waitProcessing}
+              onFileChange={this.createUploadImageHandler() || nop}
+            />
+
             <div className="footerLink">
-              Serverless microservice orchestration demo by{" "}
+              Serverless orchestration demo by{" "}
               <a href="https://twitter.com/huksley_">huksley</a>
             </div>
 
