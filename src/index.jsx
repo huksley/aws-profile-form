@@ -26,7 +26,8 @@ class App extends Page {
       alertClearTimeout: null,
       fullName: getRandomName(true).join(" "),
       faceExpressions: undefined,
-      otherProfiles: []
+      otherProfiles: [],
+      latestMessages: []
     };
     this.onMessage = this.onMessage.bind(this);
     this.onUploadComplete = this.onUploadComplete.bind(this);
@@ -80,12 +81,29 @@ class App extends Page {
     unsubscribeMessageHandler(this.onMessage);
   }
 
+  // Check message was already received
+  isDuplicate(msg) {
+    return (
+      this.state.latestMessages
+        .map(existing => JSON.stringify(existing) == JSON.stringify(msg))
+        .filter(value => value).length > 0
+    );
+  }
+
+  // Save message
+  saveMessage(msg) {
+    this.setState({
+      latestMessages: this.state.latestMessages.concat([msg])
+    });
+  }
+
   /**
    * Receive new message
    */
   onMessage(msg) {
-    if (msg && msg.message) {
+    if (msg && msg.message && !this.isDuplicate(msg)) {
       console.info("New message", msg);
+      this.saveMessage(msg);
 
       if (
         msg.code === "new-user" ||

@@ -85,7 +85,9 @@ export class Profile extends React.Component {
                 <i className="fas fa-frown" />
               )}
             {this.props.otherProfiles &&
-              this.props.otherProfiles.map(url => <img src={url} width="48" />)}
+              this.props.otherProfiles.map(url => (
+                <img key={url} src={url} width="48" />
+              ))}
           </div>
         </div>
         <Card.Content>

@@ -171,11 +171,17 @@ let registrationHandlers = [];
 if ("serviceWorker" in navigator) {
   // Handler for messages coming from the service worker
   navigator.serviceWorker.addEventListener("message", function(event) {
-    console.info(
-      "Client received message",
-      event.data["firebase-messaging-msg-data"]
-    );
-    handleIncomingMessage(event.data["firebase-messaging-msg-data"]);
+    if (event.data && event.data["firebase-messaging-msg-data"]) {
+      // Handle new wrapped style firebase-js-sdk 7.x?
+      console.info(
+        "Client received message",
+        event.data["firebase-messaging-msg-data"]
+      );
+      handleIncomingMessage(event.data["firebase-messaging-msg-data"]);
+    } else {
+      console.info("Client received message", event);
+      handleIncomingMessage(event);
+    }
   });
 }
 
