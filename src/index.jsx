@@ -95,7 +95,10 @@ class App extends Page {
     this.setState({
       waitProcessing: false,
       requestNotifications: true,
-      notificationHandler
+      notificationHandler: () => {
+        notificationHandler();
+        this.setState({ requestNotifications: false });
+      }
     });
   }
 

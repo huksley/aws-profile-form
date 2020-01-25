@@ -172,8 +172,11 @@ export class Page extends React.Component {
             </div>
 
             {this.state.requestNotifications && (
-              <button onClick={this.state.notificationHandler}>
-                Allow notifications
+              <button
+                className="request-notifications"
+                onClick={this.state.notificationHandler}
+              >
+                Click here to allow notifications.
               </button>
             )}
 
