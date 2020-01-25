@@ -1,4 +1,4 @@
-import * as uuidV4 from "uuid/v4";
+import * as uuidV4 from 'uuid/v4';
 
 /**
  * Generates event listener which handles file upload and updates
@@ -16,18 +16,30 @@ const uploadFileHandlerGenerator = (
   if (!file) {
     onMessage({
       id: uuidV4(),
-      type: 'danger',
+      type: 'warning',
       message: 'No file selected',
+      failed: true,
     });
+
     return;
   }
 
-  const ext = file.name.indexOf('.') > 0
-    ? file.name.substring(file.name.indexOf('.') + 1)
+  const ext = file.name.lastIndexOf('.') > 0
+    ? file.name.substring(file.name.lastIndexOf('.') + 1)
     : 'jpg';
 
   const targetFileName = `${userId}-${new Date().getTime()}.${ext}`;
   const targetFolder = 'profile/';
+
+  if (['jpg', 'png'].find(e => e == ext.toLowerCase()) === undefined) {
+    onMessage({
+      id: uuidV4(),
+      type: 'warning',
+      message: `Unknown file type: ${ext}`,
+      failed: true,
+    });
+    return;
+  }
 
   onMessage({
     id: uuidV4(),
@@ -35,7 +47,9 @@ const uploadFileHandlerGenerator = (
     type: 'info',
     start: true,
   });
-  console.info('Generating a upload form', file);
+
+  console.info('Generating an upload form', file);
+
   fetch(presignedFormEndpoint, {
     method: 'POST',
     headers: {
@@ -52,6 +66,7 @@ const uploadFileHandlerGenerator = (
         id: uuidV4(),
         message: 'Got presigned form',
       });
+
       const form = new FormData();
       Object.keys(presigned.fields).forEach((field) => {
         console.info(`field ${field} = ${presigned.fields[field]}`);
@@ -59,7 +74,7 @@ const uploadFileHandlerGenerator = (
       });
       form.append('file', file);
 
-      fetch(presigned.url, {
+      return fetch(presigned.url, {
         method: 'POST',
         body: form,
       })
@@ -74,7 +89,7 @@ const uploadFileHandlerGenerator = (
             id: uuidV4(),
             message: 'Uploaded',
           });
-          uploadSuccessHandler(
+          return uploadSuccessHandler(
             imageBucket,
             file.name,
             upload.url + targetFolder + targetFileName,
@@ -86,7 +101,9 @@ const uploadFileHandlerGenerator = (
             id: uuidV4(),
             type: 'warning',
             message: 'Upload failed',
+            failed: true,
           });
+          return Promise.resolve();
         });
     })
     .catch((presignedError) => {
@@ -95,7 +112,9 @@ const uploadFileHandlerGenerator = (
         id: uuidV4(),
         type: 'warning',
         message: 'Presigned form failed',
+        failed: true,
       });
+      return Promise.resolve();
     });
 };
 

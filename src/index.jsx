@@ -29,7 +29,7 @@ class App extends Page {
       otherProfiles: [],
       latestMessages: [],
       requestNotifications: false,
-      notificationHandler: () => {}
+      notificationHandler: () => { }
     };
 
     if (window.localStorage.latestMessages !== undefined) {
@@ -114,6 +114,10 @@ class App extends Page {
   // Save message
   saveMessage(msg) {
     const newMessages = this.state.latestMessages.concat([msg]);
+    // Keep no more than 20 latest messages
+    if (newMessages.length > 20) {
+      newMessages.splice(0, newMessages.length - 20)
+    }
     this.setState({
       latestMessages: newMessages
     });
@@ -124,7 +128,12 @@ class App extends Page {
    * Receive new message
    */
   onMessage(msg) {
-    if (msg && msg.message && !this.isDuplicate(msg)) {
+    if (msg && msg.message) {
+      if (this.isDuplicate(msg)) {
+        console.info("Duplicate message", msg);
+        return;
+      }
+
       console.info("New message", msg);
       this.saveMessage(msg);
 
@@ -192,6 +201,10 @@ class App extends Page {
             this.setState({ alertMessage: "", alertClearTimeout: null });
           }, 5000)
         });
+      } else if (msg.failed) {
+        this.setState({
+          waitProcessing: false
+        })
       }
     }
   }
