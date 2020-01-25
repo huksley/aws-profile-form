@@ -1,3 +1,5 @@
+import * as uuidV4 from "uuid/v4";
+
 /**
  * Generates event listener which handles file upload and updates
  * progress to specified message handler
@@ -7,12 +9,13 @@ const uploadFileHandlerGenerator = (
   imageBucket, // Image bucket we are using to upload images to
   userId,
   uploadSuccessHandler,
-  messageHandler,
+  onMessage,
 ) => (e) => {
   console.log(e.target.files);
   const file = e.target.files[0];
   if (!file) {
-    messageHandler({
+    onMessage({
+      id: uuidV4(),
       type: 'danger',
       message: 'No file selected',
     });
@@ -26,7 +29,8 @@ const uploadFileHandlerGenerator = (
   const targetFileName = `${userId}-${new Date().getTime()}.${ext}`;
   const targetFolder = 'profile/';
 
-  messageHandler({
+  onMessage({
+    id: uuidV4(),
     message: 'Uploading',
     type: 'info',
     start: true,
@@ -44,7 +48,8 @@ const uploadFileHandlerGenerator = (
     .then((presignedResponse) => presignedResponse.json())
     .then((presigned) => {
       console.info('Generated link', presigned);
-      messageHandler({
+      onMessage({
+        id: uuidV4(),
         message: 'Got presigned form',
       });
       const form = new FormData();
@@ -65,7 +70,8 @@ const uploadFileHandlerGenerator = (
             : uploadResponse.text()))
         .then((upload) => {
           console.info('Uploaded', upload);
-          messageHandler({
+          onMessage({
+            id: uuidV4(),
             message: 'Uploaded',
           });
           uploadSuccessHandler(
@@ -76,7 +82,8 @@ const uploadFileHandlerGenerator = (
         })
         .catch((uploadError) => {
           console.warn('Failed to upload', uploadError);
-          messageHandler({
+          onMessage({
+            id: uuidV4(),
             type: 'warning',
             message: 'Upload failed',
           });
@@ -84,7 +91,8 @@ const uploadFileHandlerGenerator = (
     })
     .catch((presignedError) => {
       console.warn('Failed to generate upload link', presignedError);
-      messageHandler({
+      onMessage({
+        id: uuidV4(),
         type: 'warning',
         message: 'Presigned form failed',
       });
