@@ -1,200 +1,275 @@
 import * as firebase from "firebase/app";
+import * as uuidV4 from "uuid/v4";
 
 /** Magically loads messaging into firebase namespace */
 import "firebase/messaging";
 
-firebase.initializeApp({
-  apiKey: process.env.FCM_APIKEY,
-  authDomain: "find-faces.firebaseapp.com",
-  databaseURL: "https://find-faces.firebaseio.com",
-  projectId: "find-faces",
-  storageBucket: "find-faces.appspot.com",
-  messagingSenderId: process.env.FCM_MESSAGING_SENDERID,
-  appId: process.env.FCM_APPID
-});
+// Fixed set of process.env.XXX constansts are preprocessed by webpack
+const API_MESSAGING_URL = process.env.API_MESSAGING_URL;
 
-const messaging = (() => {
-  try {
-    return firebase.messaging();
-  } catch (e) {
-    console.warn("Failed to obtain messaging: " + e.message, e);
-    alert("Messaging not supported: " + e.message);
+class Messaging {
+  start() {
+    return this;
   }
-})();
+  onMessage(message) {}
+  onRegistration(userId, token, response) {}
+  stop() {}
+  requestNotifications(handler) {}
 
-messaging.usePublicVapidKey(process.env.FCM_VAPID_KEY);
+  disableNotifications() {
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+      for (let registration of registrations) {
+        console.info("Unregistering service worker", registration);
+        registration.unregister();
+        this.setState({ alertMessage: "Stopped. Reload or close tab." });
+      }
+    });
+    return false;
+  }
 
-const msgPath = process.env.API_MESSAGING_URL;
-
-let userId = null;
-let token = null;
-let tokenTries = 5;
-
-const retrieveToken = () => {
-  messaging
-    .getToken()
-    .then(currentToken => {
-      if (currentToken) {
-        console.info("Got token", currentToken);
-        token = currentToken;
-        registerUser(currentToken);
-      } else {
-        console.info("No Instance ID token available.");
-        if (tokenTries) {
-          tokenTries--;
-          window.setTimeout(retrieveToken, 100);
+  poll() {
+    return fetch(API_MESSAGING_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        event: "messages",
+        userId: this.userId
+      })
+    })
+      .then(response => {
+        if (response.status !== 200) {
+          throw new Error(response.status + " " + response.statusText);
+        } else {
+          return response;
         }
-      }
-    })
-    .catch(function(err) {
-      console.warn("An error occurred while retrieving token. ", err);
-      if (tokenTries) {
-        tokenTries--;
-        window.setTimeout(retrieveToken, 100);
-      }
-    });
-};
+      })
+      .then(response => response.json())
+      .then(r => {
+        if (r && r.response) {
+          r.response.forEach(message => this.onMessage({ ...message.content }));
+        }
+      })
+      .catch(err => {
+        console.warn("Failed to receive messages", err);
+      });
+  }
 
-messaging
-  .requestPermission()
-  .then(() => {
-    console.info("Notification permission granted.");
-    retrieveToken();
-  })
-  .catch(function(err) {
-    console.warn("Unable to get permission to notify.", err);
-    alert("Failed to request permissions, please allow notifications.");
-  });
+  register(token) {
+    return fetch(API_MESSAGING_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        event: "register",
+        userId: null,
+        token: this.token,
+        fields: {
+          userAgent:
+            navigator.doNotTrack !== "0" ? navigator.userAgent : "do-not-track",
+          language: navigator.language
+        }
+      })
+    })
+      .then(response => {
+        if (response.status !== 200) {
+          throw new Error(response.status + " " + response.statusText);
+        } else {
+          return response;
+        }
+      })
+      .then(response => response.json())
+      .then(r => {
+        console.info("User registered, userId: " + r.userId);
+        this.userId = r.userId;
+        this.onRegistration(this.userId, this.token, r);
+        return Promise.resolve();
+      })
+      .catch(err => {
+        console.warn("Failed to register user", err);
+      });
+  }
 
-function registerUser(token) {
-  fetch(msgPath, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      event: "register",
-      userId: null,
-      token,
-      fields: {
-        userAgent:
-          navigator.doNotTrack !== "0" ? navigator.userAgent : "do-not-track",
-        language: navigator.language
-      }
+  unregister() {
+    fetch(API_MESSAGING_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        event: "unregister",
+        userId: this.userId,
+        token: this.token
+      })
     })
-  })
-    .then(response => {
-      if (response.status !== 200) {
-        throw new Error(response.status + " " + response.statusText);
-      } else {
-        return response;
-      }
-    })
-    .then(response => response.json())
-    .then(r => {
-      console.info("User registered, userId: " + r.userId);
-      userId = r.userId;
-      registrationHandlers.forEach(f => f(userId, token, r));
-    })
-    .catch(err => {
-      console.warn("Failed to register user", err);
-    });
+      .then(response => {
+        if (response.status !== 200) {
+          throw new Error(response.status + " " + response.statusText);
+        } else {
+          return response;
+        }
+      })
+      .then(response => response.json())
+      .then(r => {
+        console.info("User unregistered");
+      })
+      .catch(err => {
+        console.warn("Failed to unregister user", err);
+      });
+  }
 }
 
-function unregisterUser() {
-  fetch(msgPath, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      event: "unregister",
-      userId,
-      token
-    })
-  })
-    .then(response => {
-      if (response.status !== 200) {
-        throw new Error(response.status + " " + response.statusText);
-      } else {
-        return response;
+class FirebaseMessaging extends Messaging {
+  start(options) {
+    Object.keys(options || {}).forEach(name => (this[name] = options[name]));
+    firebase.initializeApp({
+      apiKey: process.env.FCM_APIKEY,
+      authDomain: "find-faces.firebaseapp.com",
+      databaseURL: "https://find-faces.firebaseio.com",
+      projectId: "find-faces",
+      storageBucket: "find-faces.appspot.com",
+      messagingSenderId: process.env.FCM_MESSAGING_SENDERID,
+      appId: process.env.FCM_APPID
+    });
+
+    const messaging = (() => {
+      try {
+        return firebase.messaging();
+      } catch (e) {
+        console.warn("Failed to obtain messaging: " + e.message, e);
+        alert("Messaging not supported: " + e.message);
       }
-    })
-    .then(response => response.json())
-    .then(r => {
-      console.info("User unregistered");
-    })
-    .catch(err => {
-      console.warn("Failed to unregister user", err);
+    })();
+
+    messaging.usePublicVapidKey(process.env.FCM_VAPID_KEY);
+
+    let tokenRetries = 5;
+    const retrieveToken = () => {
+      messaging
+        .getToken()
+        .then(currentToken => {
+          if (currentToken) {
+            console.info("Got token", currentToken);
+            this.token = currentToken;
+            this.register(currentToken);
+          } else {
+            console.info("No Instance ID token available.");
+            if (tokenRetries) {
+              tokenRetries--;
+              window.setTimeout(retrieveToken, 100);
+            }
+          }
+        })
+        .catch(function(err) {
+          console.warn("An error occurred while retrieving token. ", err);
+          if (tokenRetries) {
+            tokenRetries--;
+            window.setTimeout(retrieveToken, 100);
+          }
+        });
+    };
+
+    messaging
+      .requestPermission()
+      .then(() => {
+        console.info("Notification permission granted.");
+        retrieveToken();
+      })
+      .catch(err => {
+        console.warn("Unable to get permission to notify.", err);
+        this.requestNotifications(() => {
+          messaging.requestPermission().then(() => {
+            console.info("Notification permission granted.");
+            retrieveToken();
+          });
+        }, err);
+      });
+
+    messaging.onTokenRefresh(function() {
+      messaging
+        .getToken()
+        .then(refreshedToken => {
+          console.info("Token refreshed", refreshedToken);
+          this.token = refreshedToken;
+          this.register(token);
+        })
+        .catch(function(err) {
+          console.warn("Unable to retrieve refreshed token ", err);
+        });
     });
-}
 
-messaging.onTokenRefresh(function() {
-  messaging
-    .getToken()
-    .then(function(refreshedToken) {
-      console.info("Token refreshed", refreshedToken);
-      token = refreshedToken;
-      registerUser(currentToken);
-    })
-    .catch(function(err) {
-      console.warn("Unable to retrieve refreshed token ", err);
+    // Handle Google FCM incoming messages. Called when:
+    // - a message is received while the app has focus
+    // - the user clicks on an app notification created by a service worker
+    //   `messaging.setBackgroundMessageHandler` handler.
+    messaging.onMessage(message => {
+      console.info("Message received", message.data);
+      this.onMessage(message.data);
     });
-});
 
-// Handle Google FCM incoming messages. Called when:
-// - a message is received while the app has focus
-// - the user clicks on an app notification created by a service worker
-//   `messaging.setBackgroundMessageHandler` handler.
-messaging.onMessage(function(payload) {
-  console.info("Message received", payload);
-  handleIncomingMessage(payload);
-});
-
-const sendToMessageHandlers = data => {
-  messageHandlers.forEach(messageHandler => {
-    try {
-      messageHandler(data);
-    } catch (e) {
-      console.warn("Failed to send message to handler " + messageHandler, msg);
+    if ("serviceWorker" in navigator) {
+      // Handler for messages coming from the service worker
+      navigator.serviceWorker.addEventListener("message", event => {
+        if (event.data && event.data["firebase-messaging-msg-data"]) {
+          // Handle new wrapped style firebase-js-sdk 7.x?
+          console.info(
+            "Client received message (new)",
+            event.data["firebase-messaging-msg-data"].data
+          );
+          this.onMessage(event.data["firebase-messaging-msg-data"].data);
+        } else {
+          console.info("Client received message (old)", event);
+          this.onMessage(event);
+        }
+      });
     }
-  });
-};
 
-const handleIncomingMessage = msg => {
-  sendToMessageHandlers(msg.data);
-};
+    return this;
+  }
 
-let messageHandlers = [];
-let registrationHandlers = [];
+  stop() {
+    this.stopped = true;
+    this.disableNotifications();
+  }
+}
 
-if ("serviceWorker" in navigator) {
-  // Handler for messages coming from the service worker
-  navigator.serviceWorker.addEventListener("message", function(event) {
-    if (event.data && event.data["firebase-messaging-msg-data"]) {
-      // Handle new wrapped style firebase-js-sdk 7.x?
-      console.info(
-        "Client received message",
-        event.data["firebase-messaging-msg-data"]
-      );
-      handleIncomingMessage(event.data["firebase-messaging-msg-data"]);
-    } else {
-      console.info("Client received message", event);
-      handleIncomingMessage(event);
+class PollingMessaging extends Messaging {
+  start(options) {
+    Object.keys(options || {}).forEach(name => (this[name] = options[name]));
+
+    this.token = window.localStorage.token;
+    if (!this.token) {
+      this.token = uuidV4();
+      window.localStorage.token = this.token;
     }
-  });
+
+    this.register(this.token).then(_ => {
+      const pollMessagesLoop = _ => {
+        if (!this.stopped) {
+          this.poll().then(messages => {
+            window.setTimeout(pollMessagesLoop, 3000);
+          });
+        }
+      };
+
+      pollMessagesLoop();
+    });
+  }
+
+  stop() {
+    this.stopped = true;
+    this.disableNotifications();
+  }
 }
 
-export function subscribeMessageHandler(messageHandler, registrationHandler) {
-  console.info("Adding subscription for messages");
-  messageHandlers[messageHandlers.length] = messageHandler;
-  registrationHandlers[registrationHandlers.length] = registrationHandler;
-}
+Messaging.create = () => {
+  if (firebase.messaging.isSupported()) {
+    return new FirebaseMessaging();
+  } else {
+    return new PollingMessaging();
+  }
+};
 
-export function unsubscribeMessageHandler(handler, registrationHandler) {
-  console.info("Removing subscription for messages");
-  messageHandlers = messageHandlers.filter(f => f !== handler, messageHandlers);
-  registrationHandlers = registrationHandlers.filter(
-    f => f !== registrationHandler
-  );
-}
+export { Messaging };

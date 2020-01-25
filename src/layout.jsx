@@ -171,6 +171,12 @@ export class Page extends React.Component {
               )}
             </div>
 
+            {this.state.requestNotifications && (
+              <button onClick={this.state.notificationHandler}>
+                Allow notifications
+              </button>
+            )}
+
             <Profile
               profileImageUrl={this.state.profileImageUrl}
               waitProcessing={this.state.waitProcessing}

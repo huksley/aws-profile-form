@@ -3,7 +3,7 @@
  */
 export const uploadFileHandlerGenerator = (
   presignedFormEndpoint, // API to generate presigned form for uploads
-  imageBucket, // Image bucket we are using to upload images to 
+  imageBucket, // Image bucket we are using to upload images to
   userId,
   uploadSuccessHandler,
   messageHandler

@@ -7,7 +7,7 @@ const presignedFormEndpoint = process.env.API_UPLOAD_HANDLER_URL;
 const imageBucket = process.env.IMAGE_BUCKET;
 const appVersion = process.env.CODE_VERSION;
 
-import { unsubscribeMessageHandler, subscribeMessageHandler } from "./message";
+import { Messaging } from "./message";
 import { s3UrlToHttp } from "./util";
 import { Page, PLACEHOLDER_URL } from "./layout";
 import { getRandomName } from "./random-name";
@@ -27,12 +27,25 @@ class App extends Page {
       fullName: getRandomName(true).join(" "),
       faceExpressions: undefined,
       otherProfiles: [],
-      latestMessages: []
+      latestMessages: [],
+      requestNotifications: false,
+      notificationHandler: () => {}
     };
+
+    if (window.localStorage.latestMessages !== undefined) {
+      try {
+        this.state.latestMessages = JSON.parse(
+          window.localStorage.latestMessages
+        );
+      } catch (e) {
+        console.warn("Failed to parse old messages", e);
+      }
+    }
     this.onMessage = this.onMessage.bind(this);
     this.onUploadComplete = this.onUploadComplete.bind(this);
     this.onUserRegistration = this.onUserRegistration.bind(this);
     this.createUploadImageHandler = this.createUploadImageHandler.bind(this);
+    this.requestNotifications = this.requestNotifications.bind(this);
     this.disableNotifications = this.disableNotifications.bind(this);
     console.info("Starting app " + appVersion);
   }
@@ -49,14 +62,7 @@ class App extends Page {
 
   disableNotifications(event) {
     event.stopPropagation();
-    navigator.serviceWorker.getRegistrations().then(registrations => {
-      for (let registration of registrations) {
-        console.info("Unregistering service worker", registration);
-        registration.unregister();
-        this.setState({ alertMessage: "Stopped. Reload or close tab." });
-      }
-    });
-    return false;
+    this.messaging.stop();
   }
 
   onUserRegistration(userId, token, data) {
@@ -74,11 +80,23 @@ class App extends Page {
   }
 
   componentDidMount() {
-    subscribeMessageHandler(this.onMessage, this.onUserRegistration);
+    this.messaging = Messaging.create();
+    this.messaging.onMessage = this.onMessage;
+    this.messaging.onRegistration = this.onUserRegistration;
+    this.messaging.requestNotifications = this.requestNotifications;
+    this.messaging.start();
   }
 
   componentWillUnmount() {
-    unsubscribeMessageHandler(this.onMessage);
+    this.messaging.stop();
+  }
+
+  requestNotifications(notificationHandler) {
+    this.setState({
+      waitProcessing: false,
+      requestNotifications: true,
+      notificationHandler
+    });
   }
 
   // Check message was already received
@@ -92,9 +110,11 @@ class App extends Page {
 
   // Save message
   saveMessage(msg) {
+    const newMessages = this.state.latestMessages.concat([msg]);
     this.setState({
-      latestMessages: this.state.latestMessages.concat([msg])
+      latestMessages: newMessages
     });
+    window.localStorage.latestMessages = JSON.stringify(newMessages);
   }
 
   /**
@@ -124,7 +144,10 @@ class App extends Page {
       }
 
       if (msg.faces) {
-        this.setState({ faceExpressions: JSON.parse(msg.faces) });
+        this.setState({
+          faceExpressions:
+            typeof msg.faces === "string" ? JSON.parse(msg.faces) : msg.faces
+        });
       }
 
       if (this.state.alertClearTimeout !== null) {
