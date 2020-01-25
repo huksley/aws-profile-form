@@ -24,14 +24,17 @@ const uploadFileHandlerGenerator = (
     return;
   }
 
-  const ext = file.name.lastIndexOf('.') > 0
+  let ext = file.name.lastIndexOf('.') > 0
     ? file.name.substring(file.name.lastIndexOf('.') + 1)
     : 'jpg';
+  if (ext === 'jpeg') {
+    ext = 'jpg';
+  }
 
   const targetFileName = `${userId}-${new Date().getTime()}.${ext}`;
   const targetFolder = 'profile/';
 
-  if (['jpg', 'png'].find(e => e == ext.toLowerCase()) === undefined) {
+  if (['jpg', 'png'].find((allowed) => allowed === ext.toLowerCase()) === undefined) {
     onMessage({
       id: uuidV4(),
       type: 'warning',
