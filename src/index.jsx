@@ -11,7 +11,7 @@ import { Messaging } from "./message";
 import { s3UrlToHttp } from "./util";
 import { Page, PLACEHOLDER_URL } from "./layout";
 import { getRandomName } from "./random-name";
-import { uploadFileHandlerGenerator } from "./upload";
+import uploadFileHandlerGenerator from "./upload";
 
 class App extends Page {
   constructor(props) {
