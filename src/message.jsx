@@ -48,7 +48,7 @@ class Messaging {
       .then(response => response.json())
       .then(r => {
         if (r && r.response) {
-          r.response.forEach(message => this.onMessage({ ...message.content }));
+          r.response.forEach(message => this.onMessage({ id: message.id, ...message.content }));
         }
       })
       .catch(err => {
@@ -249,7 +249,7 @@ class PollingMessaging extends Messaging {
       const pollMessagesLoop = _ => {
         if (!this.stopped) {
           this.poll().then(messages => {
-            window.setTimeout(pollMessagesLoop, 3000);
+            window.setTimeout(pollMessagesLoop, 2000);
           });
         }
       };
