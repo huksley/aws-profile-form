@@ -220,8 +220,8 @@ class FirebaseMessaging extends Messaging {
           );
           this.onMessage(event.data["firebase-messaging-msg-data"].data);
         } else {
-          console.info("Client received message (old)", event);
-          this.onMessage(event);
+          console.info("Client received message (old)", event.data);
+          this.onMessage(event.data);
         }
       });
     }
